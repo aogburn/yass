@@ -1,0 +1,2 @@
+https://github.com/aogburn/yala/
+md5sum yass.sh | awk '{ print $1 }' > md5
