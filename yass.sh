@@ -189,7 +189,8 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$EXTRACT" = "true" ]; then
             CHECK_FILES=false
             for file in `find $TARGET_DIR -type f \( -iname \*.zip -o -iname \*.7z -o -iname \*.Z -o -iname \*.gz -o -iname \*.rar  -o -iname \*.bz2 -o -iname \*.xz -o -iname \*.tar -o -iname \*.tar.bz2 -o -iname \*.tar.gz -o -iname \*.tar.xz  -o -iname \*.tgz -o -iname \*.tbz2 \)`; do
                 echo "    Extracting $file"
-                aunpack -D $file; rm -rf $file &
+                mkdir $file-extract
+                aunpack -X $file-extract $file; rm -rf $file &
                 pids+=($!)
                 # We extracted, so check again in case there were nested compressed archives
                 CHECK_FILES=true
