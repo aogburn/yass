@@ -199,6 +199,13 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$EXTRACT" = "true" ]; then
             for pid in ${pids[*]}; do
                 wait $pid
             done
+
+            # remove any space in file names to simplify processing and avoid errors
+            while read line
+            do
+                echo -e "${GREEN}Removing space from $line${NC}"
+                mv "$line" "${line// /_}"
+            done < <(find $TARGET_DIR -iname "* *")
         done
         echo -e "${GREEN}File extraction complete${NC}"
     fi
