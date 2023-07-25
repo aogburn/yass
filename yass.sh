@@ -51,16 +51,29 @@ is_valid_option() {
     fi
 }
 
+# wait for a pending process to complete so we don't exceed our parallelism limit and swamp the system
+wait_for_pids() {
+    joblist=($(jobs -p))
+    while (( ${#joblist[*]} >= $PARALLEL_LIMIT ))
+    do
+        wait -n
+        joblist=($(jobs -p))
+    done
+}
+
+
 # source a global $HOME/.yass/config if available
 if [ -d $HOME/.yass ] && [ -f $HOME/.yass/config ]; then
     source $HOME/.yass/config 
 fi
 
 # set required variables with default values, if not set in $HOME/.yass/config
+# update options
 [ -z $UPDATE_MODE ] && UPDATE_MODE="force"
 [ -z $MD5 ] && MD5="https://raw.githubusercontent.com/aogburn/yass/main/md5"
-[ -z $TAR_MD5 ] && TAR_MD5="https://raw.githubusercontent.com/aogburn/yass/main/tarmd5"
 [ -z $REMOTE_YASS_SH ] && REMOTE_YASS_SH="https://raw.githubusercontent.com/aogburn/yass/main/yass.sh"
+# other
+[ -z $PARALLEL_LIMIT ] && PARALLEL_LIMIT="10"
 
 # parse the cli options
 OPTS=$(getopt -o 'a,g,s,t,x,h,u:' --long 'accessLog,gcLog,serverLog,threadDump,extract,help,updateMode:' -n "${YASS_SH}" -- "$@")
@@ -280,6 +293,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$GC" = "true" ]; then
         NUMBER_GC_LOGS=0
         for file in `find $TARGET_DIR -type f -iname \*gc\*log\*`; do
             if [[ ${file} != *".garbagecat-report" ]] && [[ ${file} != *".yass" ]]; then
+                wait_for_pids
                 echo "    Summarizing $file with $GARBAGECAT"
                 java -jar $GARBAGECAT -p $file -o $file.garbagecat-report &
                 gc_pids+=($!)
