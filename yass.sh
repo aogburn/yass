@@ -13,6 +13,18 @@ VALID_UPDATE_MODES=(force ask never)
 
 YASS_SH="$(basename "$(test -L "$0" && readlink "$0" || echo "$0")")"
 
+cleanup() {
+    pkill -P $$
+}
+
+for sig in INT QUIT HUP TERM; do
+  trap "
+    cleanup
+    trap - $sig EXIT
+    kill -s $sig "'"$$"' "$sig"
+done
+trap cleanup EXIT
+
 usage() {
     if [ ! "x$1" = "x" ]; then
         echo
