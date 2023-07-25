@@ -504,7 +504,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$GC" = "true" ]; then
         for file in `find $TARGET_DIR -type f -iname \*.garbagecat-report`; do
             echo -e "${YELLOW}## Garbagecat GC log summary of $file ##${NC}"
             echo "## Garbagecat GC log summary of $file ##" >> $TARGET_DIR/gc-log-summary.yass
-            sed -n -e '/JVM:/,/ANALYSIS:/ p' $file | grep -v "ANALYSIS:" | tee -a $TARGET_DIR/gc-log-summary.yass
+            sed -n -E -e '/(JVM|SUMMARY):/,/ANALYSIS:/ p' $file | grep -v "ANALYSIS:" | tee -a $TARGET_DIR/gc-log-summary.yass
             echo | tee -a $TARGET_DIR/gc-log-summary.yass
 
             # Track lowest throughput to report
