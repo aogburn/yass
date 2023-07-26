@@ -457,7 +457,7 @@ $MAX_AVG_NUMBER_REQUESTS_FILE"
     echo -e "${YELLOW}====== Final thread dump summary ======${NC}"
     echo "====== Final thread dump summary ======" >> $TARGET_DIR/thread-dump-summary.yass
     {
-        echo "Number of thread dump files: $NUMBER_THREAD_DUMPS" | tee -a $TARGET_DIR/thread-dump-summary.yass
+        echo "Number of thread dump files: $NUMBER_THREAD_DUMPS"
         echo
         if [ $NUMBER_THREAD_DUMPS -gt 1 ]; then
             echo "* Max number of threads is $MAX_NUMBER_THREADS in files:"
