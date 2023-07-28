@@ -561,7 +561,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                 NUM200s=`grep -E "HTTP/[0-9]\.[0-9]\"? 200 " $tmp | wc -l`
                 TOTAL_NUM200s=$((TOTAL_NUM200s + NUM200s))
 
-                NUM304s=`grep -E "HTTP/[0-9]\.[0-9]\"? 200 " $tmp | wc -l`
+                NUM304s=`grep -E "HTTP/[0-9]\.[0-9]\"? 304 " $tmp | wc -l`
                 TOTAL_NUM304s=$((TOTAL_NUM304s + NUM304s))
 
                 NUM3XXs=`grep -E "HTTP/[0-9]\.[0-9]\"? 3[0-9]([0-3]|[5-9]) " $tmp | wc -l`
@@ -590,9 +590,14 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                 fi
 
 
+                PERCENT_NUM200s=`printf %.2f $((10**4 * $NUM200s / $COMPLETED ))e-2`
+                PERCENT_NUM304s=`printf %.2f $((10**4 * $NUM304s / $COMPLETED ))e-2`
+                PERCENT_NUM3XXs=`printf %.2f $((10**4 * $NUM3XXs / $COMPLETED ))e-2`
+                PERCENT_NUM4XXs=`printf %.2f $((10**4 * $NUM4XXs / $COMPLETED ))e-2`
+                PERCENT_NUM5XXs=`printf %.2f $((10**4 * $NUM5XXs / $COMPLETED ))e-2`
                 if [ $RESPONSE_TIMES -ne "0" ]; then
                     LONG=`grep -v " [0-9]\.[0-9][0-9][0-9]$" $tmp | wc -l`
-
+                    PERCENT_LONG=`printf %.2f $((10**4 * $LONG / $COMPLETED ))e-2`
                     TOTAL_LONG=$((TOTAL_LONG + LONG))
                     if [ $LONG -gt $HIGHEST_LONG ]; then
                         HIGHEST_LONG=$LONG
@@ -603,15 +608,9 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                         fi
                     fi
 
-                    PERCENT_LONG=`printf %.2f $((10**4 * $LONG / $COMPLETED ))e-2`
-                    PERCENT_NUM200s=`printf %.2f $((10**4 * $NUM200s / $COMPLETED ))e-2`
-                    PERCENT_NUM304s=`printf %.2f $((10**4 * $NUM304s / $COMPLETED ))e-2`
-                    PERCENT_NUM3XXs=`printf %.2f $((10**4 * $NUM3XXs / $COMPLETED ))e-2`
-                    PERCENT_NUM4XXs=`printf %.2f $((10**4 * $NUM4XXs / $COMPLETED ))e-2`
-                    PERCENT_NUM5XXs=`printf %.2f $((10**4 * $NUM5XXs / $COMPLETED ))e-2`
                     printf "%s | %10s | %10s - %6s%% | %10s - %6s%% | %10s - %6s%% | %10s - %6s%% | %10s - %6s%% | %10s - %6s%%\n" $x $COMPLETED $LONG $PERCENT_LONG $NUM200s $PERCENT_NUM200s $NUM304s $PERCENT_NUM304s $NUM3XXs $PERCENT_NUM3XXs $NUM4XXs $PERCENT_NUM4XXs $NUM5XXs $PERCENT_NUM5XXs >> $file-summary.yass-access
                 else
-                    printf "%s | %10s | %10s - %6s%% | %10s - %6s%% | %10s - %6s%% | %10s - %6s%% | %10s - %6s%%\n" $x $COMPLETED $PERCENT_LONG $NUM200s $PERCENT_NUM200s $NUM304s $PERCENT_NUM304s $NUM3XXs $PERCENT_NUM3XXs $NUM4XXs $PERCENT_NUM4XXs $NUM5XXs $PERCENT_NUM5XXs >> $file-summary.yass-access
+                    printf "%s | %10s | %10s - %6s%% | %10s - %6s%% | %10s - %6s%% | %10s - %6s%% | %10s - %6s%%\n" $x $COMPLETED $NUM200s $PERCENT_NUM200s $NUM304s $PERCENT_NUM304s $NUM3XXs $PERCENT_NUM3XXs $NUM4XXs $PERCENT_NUM4XXs $NUM5XXs $PERCENT_NUM5XXs >> $file-summary.yass-access
                 fi
             done
 
