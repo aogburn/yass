@@ -487,6 +487,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
     echo -e "${GREEN}## Finding and summarizing access files in $TARGET_DIR  ##${NC}"
     echo
     #peaks across all access logs
+    ANY_RESPONSE_TIMES=0
     NUMBER_ACCESS_LOGS=0
     PEAK_COMPLETED=0
     PEAK_COMPLETED_DATE_FILE=0
@@ -501,8 +502,6 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
     for file in `find $TARGET_DIR -type f -iname \*access\*log\*`; do
         if [[ ${file} != *".yass"* ]]; then
             echo "    Summarizing $file" | tee $file-summary.yass-access
-           printf "%17s | %10s | %20s | %20s | %20s | %20s | %20s | %20s\n" "DATE" "COMPLETED" "LONGER(>10s)" "200s" "304s" "OTHER 3XXs" "4XXs" "5XXs" >> $file-summary.yass-access
-           echo "========================================================================================================================================================================" >> $file-summary.yass-access
 
             # completed - count of completed requests
             # long - count of long requests (>10 sec)
@@ -530,6 +529,15 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
             RESPONSE_TIMES=`grep -m 1 "[0-9]\.[0-9][0-9][0-9]$" $file | wc -l`
             if [ $RESPONSE_TIMES -eq "0" ]; then
                 echo "        Response times not found in $file.  Use %T as last field of access-log pattern for response time summaries."
+            fi
+
+            if [ $RESPONSE_TIMES -ne "0" ]; then
+                ANY_RESPONSE_TIMES=$RESPONSE_TIMES
+                printf "%17s | %10s | %20s | %20s | %20s | %20s | %20s | %20s\n" "DATE" "COMPLETED" "LONGER(>10s)" "200s" "304s" "OTHER 3XXs" "4XXs" "5XXs" >> $file-summary.yass-access
+                echo "========================================================================================================================================================================" >> $file-summary.yass-access
+            else
+                printf "%17s | %10s | %20s | %20s | %20s | %20s | %20s\n" "DATE" "COMPLETED" "200s" "304s" "OTHER 3XXs" "4XXs" "5XXs" >> $file-summary.yass-access
+                echo "=================================================================================================================================================" >> $file-summary.yass-access
             fi
 
             DATES=`cat $file | awk '{ print $4 }' | sed 's/\[//'| sed 's/:[0-9][0-9]$//' | uniq`;
@@ -603,7 +611,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                     PERCENT_NUM5XXs=`printf %.2f $((10**4 * $NUM5XXs / $COMPLETED ))e-2`
                     printf "%s | %10s | %10s - %6s%% | %10s - %6s%% | %10s - %6s%% | %10s - %6s%% | %10s - %6s%% | %10s - %6s%%\n" $x $COMPLETED $LONG $PERCENT_LONG $NUM200s $PERCENT_NUM200s $NUM304s $PERCENT_NUM304s $NUM3XXs $PERCENT_NUM3XXs $NUM4XXs $PERCENT_NUM4XXs $NUM5XXs $PERCENT_NUM5XXs >> $file-summary.yass-access
                 else
-                    printf "%s | Completed: %10s\n" $d $COMPLETED >> $file-summary.yass-access
+                    printf "%s | %10s | %10s - %6s%% | %10s - %6s%% | %10s - %6s%% | %10s - %6s%% | %10s - %6s%%\n" $x $COMPLETED $PERCENT_LONG $NUM200s $PERCENT_NUM200s $NUM304s $PERCENT_NUM304s $NUM3XXs $PERCENT_NUM3XXs $NUM4XXs $PERCENT_NUM4XXs $NUM5XXs $PERCENT_NUM5XXs >> $file-summary.yass-access
                 fi
             done
 
@@ -618,8 +626,9 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                 echo "* Number of 4XXs: $TOTAL_NUM4XXs - `printf %.2f $((10**4 * $TOTAL_NUM4XXs / $TOTAL_COMPLETED ))e-2`%"
                 echo "* Number of 5XXs: $TOTAL_NUM5XXs - `printf %.2f $((10**4 * $TOTAL_NUM5XXs / $TOTAL_COMPLETED ))e-2`%"
                 echo "* Highest completed request count is $HIGHEST_COMPLETED at $HIGHEST_COMPLETED_DATE"
-                echo "* Highest long response count is $HIGHEST_LONG at $HIGHEST_LONG_DATE"
-                echo "* Highest long response count is $HIGHEST_LONG at $HIGHEST_LONG_DATE"
+                if [ $RESPONSE_TIMES -ne "0" ]; then
+                    echo "* Highest long response count is $HIGHEST_LONG at $HIGHEST_LONG_DATE"
+                fi
                 echo "* Highest number of 4XX responses is $HIGHEST_NUM4XXs at $HIGHEST_NUM4XXs_DATE"
                 echo "* Highest number of 5XX responses is $HIGHEST_NUM5XXs at $HIGHEST_NUM5XXs_DATE"
                 echo
@@ -635,7 +644,9 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
     {
         echo "Number of access log files: $NUMBER_ACCESS_LOGS" | tee -a $TARGET_DIR/access-log.yass-report
         echo "* Peak completed request count is $PEAK_COMPLETED at $PEAK_COMPLETED_DATE_FILE"
-        echo "* Peak long response count is $PEAK_LONG at $PEAK_LONG_DATE_FILE"
+        if [ $ANY_RESPONSE_TIMES -ne "0" ]; then
+            echo "* Peak long response count is $PEAK_LONG at $PEAK_LONG_DATE_FILE"
+        fi
         echo "* Peak number of 4XX responses is $PEAK_NUM4XXs at $PEAK_NUM4XXs_DATE_FILE"
         echo "* Peak number of 5XX responses is $PEAK_NUM5XXs at $PEAK_NUM5XXs_DATE_FILE"
     } | tee -a $TARGET_DIR/access-log.yass-report
