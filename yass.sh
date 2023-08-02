@@ -644,12 +644,14 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
     echo "====== Final access log summary ======" >> $TARGET_DIR/access-log.yass-report
     {
         echo "Number of access log files: $NUMBER_ACCESS_LOGS" | tee -a $TARGET_DIR/access-log.yass-report
-        echo "* Peak completed request count is $PEAK_COMPLETED at $PEAK_COMPLETED_DATE_FILE"
-        if [ $ANY_RESPONSE_TIMES -ne "0" ]; then
-            echo "* Peak long response count is $PEAK_LONG at $PEAK_LONG_DATE_FILE"
+        if [ $NUMBER_ACCESS_LOGS -gt 0 ]; then
+            echo "* Peak completed request count is $PEAK_COMPLETED at $PEAK_COMPLETED_DATE_FILE"
+            if [ $ANY_RESPONSE_TIMES -ne "0" ]; then
+                echo "* Peak long response count is $PEAK_LONG at $PEAK_LONG_DATE_FILE"
+            fi
+            echo "* Peak number of 4XX responses is $PEAK_NUM4XXs at $PEAK_NUM4XXs_DATE_FILE"
+            echo "* Peak number of 5XX responses is $PEAK_NUM5XXs at $PEAK_NUM5XXs_DATE_FILE"
         fi
-        echo "* Peak number of 4XX responses is $PEAK_NUM4XXs at $PEAK_NUM4XXs_DATE_FILE"
-        echo "* Peak number of 5XX responses is $PEAK_NUM5XXs at $PEAK_NUM5XXs_DATE_FILE"
     } | tee -a $TARGET_DIR/access-log.yass-report
     echo -e "${YELLOW}====== Completed access log summary ======${NC}"
     echo "====== Completed access log summary ======" >> $TARGET_DIR/access-log.yass-report
