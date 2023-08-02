@@ -540,7 +540,9 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                 echo "=================================================================================================================================================" >> $file-summary.yass-access
             fi
 
-            DATES=`cat $file | awk '{ print $4 }' | sed 's/\[//'| sed 's/:[0-9][0-9]$//' | uniq`;
+            #DATES=`cat $file | awk '{ print $4 }' | sed 's/\[//'| sed 's/:[0-9][0-9]$//' | uniq`;
+            # fleshed out sed to find and support date in any column
+            DATES=`cat $file | sed -E 's/.*\[([0-9][0-9]\/[A-Z][a-z][a-z]\/20[0-9][0-9]:[0-9][0-9]:[0-9][0-9]).*/\1/g' | uniq`;
             for x in $DATES; do
                 # longest this minute
                 LONGEST=0
