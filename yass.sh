@@ -619,17 +619,19 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
             echo "## Access log summary of $file ##" >> $TARGET_DIR/access-log.yass-report
             {
                 echo "* Number of requests: $TOTAL_COMPLETED"
-                echo "* Number of 200s: $TOTAL_NUM200s - `printf %.2f $((10**4 * $TOTAL_NUM200s / $TOTAL_COMPLETED ))e-2`%"
-                echo "* Number of 304s: $TOTAL_NUM304s - `printf %.2f $((10**4 * $TOTAL_NUM304s / $TOTAL_COMPLETED ))e-2`%"
-                echo "* Number of 4XXs: $TOTAL_NUM3XXs - `printf %.2f $((10**4 * $TOTAL_NUM3XXs / $TOTAL_COMPLETED ))e-2`%"
-                echo "* Number of 4XXs: $TOTAL_NUM4XXs - `printf %.2f $((10**4 * $TOTAL_NUM4XXs / $TOTAL_COMPLETED ))e-2`%"
-                echo "* Number of 5XXs: $TOTAL_NUM5XXs - `printf %.2f $((10**4 * $TOTAL_NUM5XXs / $TOTAL_COMPLETED ))e-2`%"
-                echo "* Highest completed request count is $HIGHEST_COMPLETED at $HIGHEST_COMPLETED_DATE"
-                if [ $RESPONSE_TIMES -ne "0" ]; then
-                    echo "* Highest long response count is $HIGHEST_LONG at $HIGHEST_LONG_DATE"
+                if [ $TOTAL_COMPLETED -gt 0 ]; then
+                    echo "* Number of 200s: $TOTAL_NUM200s - `printf %.2f $((10**4 * $TOTAL_NUM200s / $TOTAL_COMPLETED ))e-2`%"
+                    echo "* Number of 304s: $TOTAL_NUM304s - `printf %.2f $((10**4 * $TOTAL_NUM304s / $TOTAL_COMPLETED ))e-2`%"
+                    echo "* Number of 4XXs: $TOTAL_NUM3XXs - `printf %.2f $((10**4 * $TOTAL_NUM3XXs / $TOTAL_COMPLETED ))e-2`%"
+                    echo "* Number of 4XXs: $TOTAL_NUM4XXs - `printf %.2f $((10**4 * $TOTAL_NUM4XXs / $TOTAL_COMPLETED ))e-2`%"
+                    echo "* Number of 5XXs: $TOTAL_NUM5XXs - `printf %.2f $((10**4 * $TOTAL_NUM5XXs / $TOTAL_COMPLETED ))e-2`%"
+                    echo "* Highest completed request count is $HIGHEST_COMPLETED at $HIGHEST_COMPLETED_DATE"
+                    if [ $RESPONSE_TIMES -ne "0" ]; then
+                        echo "* Highest long response count is $HIGHEST_LONG at $HIGHEST_LONG_DATE"
+                    fi
+                    echo "* Highest number of 4XX responses is $HIGHEST_NUM4XXs at $HIGHEST_NUM4XXs_DATE"
+                    echo "* Highest number of 5XX responses is $HIGHEST_NUM5XXs at $HIGHEST_NUM5XXs_DATE"
                 fi
-                echo "* Highest number of 4XX responses is $HIGHEST_NUM4XXs at $HIGHEST_NUM4XXs_DATE"
-                echo "* Highest number of 5XX responses is $HIGHEST_NUM5XXs at $HIGHEST_NUM5XXs_DATE"
                 echo
             } | tee -a $TARGET_DIR/access-log.yass-report
             rm -rf $tmp
