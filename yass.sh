@@ -87,6 +87,14 @@ fi
 # other
 [ -z $PARALLEL_LIMIT ] && PARALLEL_LIMIT="10"
 [ -z $GARBAGECAT_OPTS ] && GARBAGECAT_OPTS="-p -t 40"
+# Setup the JVM
+if [ "x$JAVA" = "x" ]; then
+    if [ "x$JAVA_HOME" != "x" ]; then
+        JAVA="$JAVA_HOME/bin/java"
+    else
+        JAVA="java"
+    fi
+fi
 
 # parse the cli options
 OPTS=$(getopt -o 'a,g,s,t,x,h,u:' --long 'accessLog,gcLog,serverLog,threadDump,extract,help,updateMode:' -n "${YASS_SH}" -- "$@")
@@ -308,7 +316,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$GC" = "true" ]; then
             if [[ ${file} != *".garbagecat-report" ]] && [[ ${file} != *".yass"* ]]; then
                 wait_for_pids
                 echo "    Summarizing $file with $GARBAGECAT"
-                java -jar $GARBAGECAT $GARBAGECAT_OPTS $file -o $file.garbagecat-report &
+                $JAVA $JAVA_OPTS -jar $GARBAGECAT $GARBAGECAT_OPTS $file -o $file.garbagecat-report &
                 gc_pids+=($!)
                 NUMBER_GC_LOGS=$((NUMBER_GC_LOGS+1))
             fi
