@@ -86,6 +86,7 @@ fi
 [ -z $REMOTE_YASS_SH ] && REMOTE_YASS_SH="https://raw.githubusercontent.com/aogburn/yass/main/yass.sh"
 # other
 [ -z $PARALLEL_LIMIT ] && PARALLEL_LIMIT="10"
+[ -z $GARBAGECAT_OPTS ] && GARBAGECAT_OPTS="-p -t 40"
 
 # parse the cli options
 OPTS=$(getopt -o 'a,g,s,t,x,h,u:' --long 'accessLog,gcLog,serverLog,threadDump,extract,help,updateMode:' -n "${YASS_SH}" -- "$@")
@@ -304,10 +305,10 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$GC" = "true" ]; then
         gc_pids=()
         NUMBER_GC_LOGS=0
         for file in `find $TARGET_DIR -type f -iname \*gc\*log\*`; do
-            if [[ ${file} != *".garbagecat-report" ]] && [[ ${file} != *".yass" ]]; then
+            if [[ ${file} != *".garbagecat-report" ]] && [[ ${file} != *".yass"* ]]; then
                 wait_for_pids
                 echo "    Summarizing $file with $GARBAGECAT"
-                java -jar $GARBAGECAT -p $file -o $file.garbagecat-report &
+                java -jar $GARBAGECAT $GARBAGECAT_OPTS $file -o $file.garbagecat-report &
                 gc_pids+=($!)
                 NUMBER_GC_LOGS=$((NUMBER_GC_LOGS+1))
             fi
