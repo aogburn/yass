@@ -494,6 +494,7 @@ fi
 # Summarize access logs
 if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
     echo -e "${GREEN}## Finding and summarizing access files in $TARGET_DIR  ##${NC}"
+    echo -e "## Summarizing access files in $TARGET_DIR  ##" > $TARGET_DIR/access-log.yass-report
     echo
     #peaks across all access logs
     ANY_RESPONSE_TIMES=0
@@ -663,7 +664,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
     echo -e "${YELLOW}====== Final access log summary ======${NC}"
     echo "====== Final access log summary ======" >> $TARGET_DIR/access-log.yass-report
     {
-        echo "Number of access log files: $NUMBER_ACCESS_LOGS" | tee -a $TARGET_DIR/access-log.yass-report
+        echo "Number of access log files: $NUMBER_ACCESS_LOGS"
         if [ $NUMBER_ACCESS_LOGS -gt 0 ]; then
             echo "* Peak completed request count is $PEAK_COMPLETED at $PEAK_COMPLETED_DATE_FILE"
             if [ $ANY_RESPONSE_TIMES -ne "0" ]; then
@@ -735,7 +736,7 @@ $file"
     echo "====== Final GC summary ======" >> $TARGET_DIR/gc-log.yass-report
     # Output low & max
     {
-        echo "Number of GC log files: $NUMBER_GC_LOGS" | tee -a $TARGET_DIR/gc-log.yass-report
+        echo "Number of GC log files: $NUMBER_GC_LOGS"
         if [ $NUMBER_GC_LOGS -gt 1 ]; then
             echo "* Lowest throughput is $LOWEST_THROUGHPUT in files:"
             echo "$LOWEST_THROUGHPUT_FILE"
