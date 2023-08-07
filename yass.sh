@@ -600,15 +600,24 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                     fi
                 fi
 
-
-                PERCENT_NUM200s=`printf %.2f $((10**4 * $NUM200s / $COMPLETED ))e-2`
-                PERCENT_NUM304s=`printf %.2f $((10**4 * $NUM304s / $COMPLETED ))e-2`
-                PERCENT_NUM3XXs=`printf %.2f $((10**4 * $NUM3XXs / $COMPLETED ))e-2`
-                PERCENT_NUM4XXs=`printf %.2f $((10**4 * $NUM4XXs / $COMPLETED ))e-2`
-                PERCENT_NUM5XXs=`printf %.2f $((10**4 * $NUM5XXs / $COMPLETED ))e-2`
+                PERCENT_NUM200s=0
+                PERCENT_NUM304s=0
+                PERCENT_NUM3XXs=0
+                PERCENT_NUM4XXs=0
+                PERCENT_NUM5XXs=0
+                PERCENT_LONG=0
+                if [ $COMPLETED -gt "0" ]; then
+                    PERCENT_NUM200s=`printf %.2f $((10**4 * $NUM200s / $COMPLETED ))e-2`
+                    PERCENT_NUM304s=`printf %.2f $((10**4 * $NUM304s / $COMPLETED ))e-2`
+                    PERCENT_NUM3XXs=`printf %.2f $((10**4 * $NUM3XXs / $COMPLETED ))e-2`
+                    PERCENT_NUM4XXs=`printf %.2f $((10**4 * $NUM4XXs / $COMPLETED ))e-2`
+                    PERCENT_NUM5XXs=`printf %.2f $((10**4 * $NUM5XXs / $COMPLETED ))e-2`
+                fi
                 if [ $RESPONSE_TIMES -ne "0" ]; then
                     LONG=`grep -v " [0-9]\.[0-9][0-9][0-9]$" $tmp | wc -l`
-                    PERCENT_LONG=`printf %.2f $((10**4 * $LONG / $COMPLETED ))e-2`
+                    if [ $COMPLETED -gt "0" ]; then
+                        PERCENT_LONG=`printf %.2f $((10**4 * $LONG / $COMPLETED ))e-2`
+                    fi
                     TOTAL_LONG=$((TOTAL_LONG + LONG))
                     if [ $LONG -gt $HIGHEST_LONG ]; then
                         HIGHEST_LONG=$LONG
