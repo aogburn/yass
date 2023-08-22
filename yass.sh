@@ -266,7 +266,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$SERVER" = "true" ]; then
         NUMBER_SERVER_LOGS=0
         server_pids=()
         for file in `find $TARGET_DIR -type f -iname \*server\*log\*`; do
-            if [[ ${file} != *".yala"* ]] && [[ ${file} != *".yass" ]]; then
+            if [[ ${file} != *".yala"* ]] && [[ ${file} != *".yass"* ]]; then
                 echo "    Summarizing $file with $YALA_SH"
                 #$YALA_SH -u never $file > $file.yala-summary &
                 $YALA_SH -u never $file &> /dev/null &
@@ -552,11 +552,10 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
 
             #DATES=`cat $file | awk '{ print $4 }' | sed 's/\[//'| sed 's/:[0-9][0-9]$//' | uniq`;
             # fleshed out sed to find and support date in any column
-            DATES=`cat $file | sed -E 's/.*\[([0-9][0-9]\/[A-Z][a-z][a-z]\/20[0-9][0-9]:[0-9][0-9]:[0-9][0-9]).*/\1/g' | uniq`;
+            DATES=`grep -E "*\[([0-9][0-9]\/[A-Z][a-z][a-z]\/20[0-9][0-9]:[0-9][0-9]:[0-9][0-9]).*" $file | sed -E 's/.*\[([0-9][0-9]\/[A-Z][a-z][a-z]\/20[0-9][0-9]:[0-9][0-9]:[0-9][0-9]).*/\1/g' | uniq`;
             for x in $DATES; do
                 # longest this minute
                 LONGEST=0
-
                 grep "$x" $file > $tmp
                 COMPLETED=`cat $tmp | wc -l`
                 TOTAL_COMPLETED=$((TOTAL_COMPLETED + COMPLETED))
