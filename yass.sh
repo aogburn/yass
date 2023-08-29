@@ -513,6 +513,8 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
         if [[ ${file} != *".yass"* ]]; then
             echo "    Summarizing $file" | tee $file-summary.yass-access
 
+            # progress count
+            i=0
             # completed - count of completed requests
             # long - count of long requests (>10 sec)
             TOTAL_COMPLETED=0
@@ -550,53 +552,58 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                 echo "=================================================================================================================================================" >> $file-summary.yass-access
             fi
 
-            #DATES=`cat $file | awk '{ print $4 }' | sed 's/\[//'| sed 's/:[0-9][0-9]$//' | uniq`;
-            # fleshed out sed to find and support date in any column
-            DATES=`grep -E "*\[([0-9][0-9]\/[A-Z][a-z][a-z]\/20[0-9][0-9]:[0-9][0-9]:[0-9][0-9]).*" $file | sed -E 's/.*\[([0-9][0-9]\/[A-Z][a-z][a-z]\/20[0-9][0-9]:[0-9][0-9]:[0-9][0-9]).*/\1/g' | uniq`;
-            for x in $DATES; do
+            #temporarily split each minute to a separate file
+            awk -v f="$tmp" -F '[\\[/:]' '{print > f "." $2 ":" $3 ":" $4 ":" $5 ":" $6}' $file
+            #for x in $DATES; do
+            DATE_COUNT=`ls -1 $tmp* | wc -l`
+            for current in `ls -1 $tmp*`; do
                 # longest this minute
                 LONGEST=0
-                grep "$x" $file > $tmp
-                COMPLETED=`cat $tmp | wc -l`
+                i=$((i+1))
+                DATE=`echo $current | sed -E 's/.*yass-access-tmp\.(.*)/\1/g'`
+                COMPLETED=`cat $current | wc -l`
+                printf "$i of $DATE_COUNT minute stamps - $current\033[0K\r"
+
+
                 TOTAL_COMPLETED=$((TOTAL_COMPLETED + COMPLETED))
                 if [ $COMPLETED -gt $HIGHEST_COMPLETED ]; then
                     HIGHEST_COMPLETED=$COMPLETED
-                    HIGHEST_COMPLETED_DATE=$x
+                    HIGHEST_COMPLETED_DATE=$DATE
                     if [ $COMPLETED -gt $PEAK_COMPLETED ]; then
                         PEAK_COMPLETED=$COMPLETED
-                        PEAK_COMPLETED_DATE_FILE="$x in $file"
+                        PEAK_COMPLETED_DATE_FILE="$DATE in $file"
                     fi
                 fi
 
 
-                NUM200s=`grep -E "HTTP/[0-9]\.[0-9]\"? 200 " $tmp | wc -l`
+                NUM200s=`grep -E "HTTP/[0-9]\.[0-9]\"? 200 " $current | wc -l`
                 TOTAL_NUM200s=$((TOTAL_NUM200s + NUM200s))
 
-                NUM304s=`grep -E "HTTP/[0-9]\.[0-9]\"? 304 " $tmp | wc -l`
+                NUM304s=`grep -E "HTTP/[0-9]\.[0-9]\"? 304 " $current | wc -l`
                 TOTAL_NUM304s=$((TOTAL_NUM304s + NUM304s))
 
-                NUM3XXs=`grep -E "HTTP/[0-9]\.[0-9]\"? 3[0-9]([0-3]|[5-9]) " $tmp | wc -l`
+                NUM3XXs=`grep -E "HTTP/[0-9]\.[0-9]\"? 3[0-9]([0-3]|[5-9]) " $current | wc -l`
                 TOTAL_NUM3XXs=$((TOTAL_NUM3XXs + NUM3XXs))
 
-                NUM4XXs=`grep -E "HTTP/[0-9]\.[0-9]\"? 4[0-9][0-9] " $tmp | wc -l`
+                NUM4XXs=`grep -E "HTTP/[0-9]\.[0-9]\"? 4[0-9][0-9] " $current | wc -l`
                 TOTAL_NUM4XXs=$((TOTAL_NUM4XXs + NUM4XXs))
                 if [ $NUM4XXs -gt $HIGHEST_NUM4XXs ]; then
                     HIGHEST_NUM4XXs=$NUM4XXs
-                    HIGHEST_NUM4XXs_DATE=$x
+                    HIGHEST_NUM4XXs_DATE=$DATE
                     if [ $NUM4XXs -gt $PEAK_NUM4XXs ]; then
                         PEAK_NUM4XXs=$NUM4XXs
-                        PEAK_NUM4XXs_DATE_FILE="$x in $file"
+                        PEAK_NUM4XXs_DATE_FILE="$DATE in $file"
                     fi
                 fi
 
-                NUM5XXs=`grep -E "HTTP/[0-9]\.[0-9]\"? 5[0-9][0-9] " $tmp | wc -l`
+                NUM5XXs=`grep -E "HTTP/[0-9]\.[0-9]\"? 5[0-9][0-9] " $current | wc -l`
                 TOTAL_NUM5XXs=$((TOTAL_NUM5XXs + NUM5XXs))
                 if [ $NUM5XXs -gt $HIGHEST_NUM5XXs ]; then
                     HIGHEST_NUM5XXs=$NUM5XXs
-                    HIGHEST_NUM5XXs_DATE=$x
+                    HIGHEST_NUM5XXs_DATE=$DATE
                     if [ $NUM5XXs -gt $PEAK_NUM5XXs ]; then
                         PEAK_NUM5XXs=$NUM5XXs
-                        PEAK_NUM5XXs_DATE_FILE="$x in $file"
+                        PEAK_NUM5XXs_DATE_FILE="$DATE in $file"
                     fi
                 fi
 
@@ -614,32 +621,39 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                     PERCENT_NUM5XXs=`printf %.2f $((10**4 * $NUM5XXs / $COMPLETED ))e-2`
                 fi
                 if [ $RESPONSE_TIMES -ne "0" ]; then
-                    LONG=`grep -v " [0-9]\.[0-9][0-9][0-9]$" $tmp | wc -l`
+                    LONG=`grep -v " [0-9]\.[0-9][0-9][0-9]$" $current | wc -l`
                     if [ $COMPLETED -gt "0" ]; then
                         PERCENT_LONG=`printf %.2f $((10**4 * $LONG / $COMPLETED ))e-2`
                     fi
                     TOTAL_LONG=$((TOTAL_LONG + LONG))
                     if [ $LONG -gt $HIGHEST_LONG ]; then
                         HIGHEST_LONG=$LONG
-                        HIGHEST_LONG_DATE=$x
+                        HIGHEST_LONG_DATE=$DATE
                         if [ $LONG -gt $PEAK_LONG ]; then
                             PEAK_LONG=$LONG
-                            PEAK_LONG_DATE_FILE="$x in $file"
+                            PEAK_LONG_DATE_FILE="$DATE in $file"
                         fi
                     fi
 
-                    printf "%s | %10s | %10s - %6s%% | %10s - %6s%% | %10s - %6s%% | %10s - %6s%% | %10s - %6s%% | %10s - %6s%%\n" $x $COMPLETED $LONG $PERCENT_LONG $NUM200s $PERCENT_NUM200s $NUM304s $PERCENT_NUM304s $NUM3XXs $PERCENT_NUM3XXs $NUM4XXs $PERCENT_NUM4XXs $NUM5XXs $PERCENT_NUM5XXs >> $file-summary.yass-access
+                    printf "%s | %10s | %10s - %6s%% | %10s - %6s%% | %10s - %6s%% | %10s - %6s%% | %10s - %6s%% | %10s - %6s%%\n" $DATE $COMPLETED $LONG $PERCENT_LONG $NUM200s $PERCENT_NUM200s $NUM304s $PERCENT_NUM304s $NUM3XXs $PERCENT_NUM3XXs $NUM4XXs $PERCENT_NUM4XXs $NUM5XXs $PERCENT_NUM5XXs >> $file-summary.yass-access
                 else
-                    printf "%s | %10s | %10s - %6s%% | %10s - %6s%% | %10s - %6s%% | %10s - %6s%% | %10s - %6s%%\n" $x $COMPLETED $NUM200s $PERCENT_NUM200s $NUM304s $PERCENT_NUM304s $NUM3XXs $PERCENT_NUM3XXs $NUM4XXs $PERCENT_NUM4XXs $NUM5XXs $PERCENT_NUM5XXs >> $file-summary.yass-access
+                    printf "%s | %10s | %10s - %6s%% | %10s - %6s%% | %10s - %6s%% | %10s - %6s%% | %10s - %6s%%\n" $DATE $COMPLETED $NUM200s $PERCENT_NUM200s $NUM304s $PERCENT_NUM304s $NUM3XXs $PERCENT_NUM3XXs $NUM4XXs $PERCENT_NUM4XXs $NUM5XXs $PERCENT_NUM5XXs >> $file-summary.yass-access
                 fi
+
+                rm -rf $current
             done
 
+            printf "\033[0K\r"
             echo >> $file-summary.yass-access
             echo -e "${YELLOW}## Access log summary of $file ##${NC}"
             echo "## Access log summary of $file ##" >> $TARGET_DIR/access-log.yass-report
             {
                 echo "* Number of requests: $TOTAL_COMPLETED"
                 if [ $TOTAL_COMPLETED -gt 0 ]; then
+                    echo -n "* First: "
+                    head -n 1 $file
+                    echo -n "* Last: "
+                    tail -n 1 $file
                     echo "* Number of 200s: $TOTAL_NUM200s - `printf %.2f $((10**4 * $TOTAL_NUM200s / $TOTAL_COMPLETED ))e-2`%"
                     echo "* Number of 304s: $TOTAL_NUM304s - `printf %.2f $((10**4 * $TOTAL_NUM304s / $TOTAL_COMPLETED ))e-2`%"
                     echo "* Number of 4XXs: $TOTAL_NUM3XXs - `printf %.2f $((10**4 * $TOTAL_NUM3XXs / $TOTAL_COMPLETED ))e-2`%"
@@ -654,7 +668,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                 fi
                 echo
             } | tee -a $TARGET_DIR/access-log.yass-report
-            rm -rf $tmp
+            rm -rf $tmp*
             NUMBER_ACCESS_LOGS=$((NUMBER_ACCESS_LOGS+1))
         fi
     done
