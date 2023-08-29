@@ -656,7 +656,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                     tail -n 1 $file
                     echo "* Number of 200s: $TOTAL_NUM200s - `printf %.2f $((10**4 * $TOTAL_NUM200s / $TOTAL_COMPLETED ))e-2`%"
                     echo "* Number of 304s: $TOTAL_NUM304s - `printf %.2f $((10**4 * $TOTAL_NUM304s / $TOTAL_COMPLETED ))e-2`%"
-                    echo "* Number of 4XXs: $TOTAL_NUM3XXs - `printf %.2f $((10**4 * $TOTAL_NUM3XXs / $TOTAL_COMPLETED ))e-2`%"
+                    echo "* Number of 3XXs: $TOTAL_NUM3XXs - `printf %.2f $((10**4 * $TOTAL_NUM3XXs / $TOTAL_COMPLETED ))e-2`%"
                     echo "* Number of 4XXs: $TOTAL_NUM4XXs - `printf %.2f $((10**4 * $TOTAL_NUM4XXs / $TOTAL_COMPLETED ))e-2`%"
                     echo "* Number of 5XXs: $TOTAL_NUM5XXs - `printf %.2f $((10**4 * $TOTAL_NUM5XXs / $TOTAL_COMPLETED ))e-2`%"
                     echo "* Highest completed request count is $HIGHEST_COMPLETED at $HIGHEST_COMPLETED_DATE"
