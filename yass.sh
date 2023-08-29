@@ -377,7 +377,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$THREAD" = "true" ]; then
             echo -e "${YELLOW}## Yatda summary of $file ##${NC}"
             echo "## Yatda summary of $file ##" >> $TARGET_DIR/thread-dump.yass-report
             sed -n -e '/Number of thread dumps:/,/Specific findings/ p' $file | grep -v "Specific findings" | tee -a $TARGET_DIR/thread-dump.yass-report
-            sed -n -e '/Top lines of request threads/,/Most common from first/ p' $file | grep -v "Most common from first" | tee -a $TARGET_DIR/thread-dump.yass-report
+            sed -n -e '/Request thread states/,/Most common from first/ p' $file | grep -v "Most common from first" | tee -a $TARGET_DIR/thread-dump.yass-report
             if [ -f $file-cpu ]; then 
                 grep "Max " -A 1 $file-cpu | tee -a $TARGET_DIR/thread-dump.yass-report
             fi
