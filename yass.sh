@@ -156,6 +156,7 @@ fi
 EXT=".yass"
 DIR=`dirname "$(readlink -f "$0")"`
 DEST=$TARGET_DIR/summary$EXT
+FILE_PREFIX="file://"
 
 # Colors
 export RED='\033[0;31m'
@@ -267,7 +268,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$SERVER" = "true" ]; then
         server_pids=()
         for file in `find $TARGET_DIR -type f -iname \*server\*log\*`; do
             if [[ ${file} != *".yala"* ]] && [[ ${file} != *".yass"* ]]; then
-                echo "    Summarizing $file with $YALA_SH"
+                echo "    Summarizing $FILE_PREFIX$file with $YALA_SH"
                 #$YALA_SH -u never $file > $file.yala-summary &
                 $YALA_SH -u never $file &> /dev/null &
                 server_pids+=($!)
@@ -290,7 +291,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$THREAD" = "true" ]; then
         for file in `grep -lR "Full thread dump " $TARGET_DIR`; do
             isFile=`file $file | grep "ASCII text"`
             if [ "$isFile" != "" ]; then
-                echo "    Summarizing $file with $YATDA_SH"
+                echo "    Summarizing $FILE_PREFIX$file with $YATDA_SH"
                 #$YATDA_SH -u never $file > $file.yatda-summary &
                 $YATDA_SH -u never $file &> /dev/null &
                 dump_pids+=($!)
@@ -315,7 +316,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$GC" = "true" ]; then
         for file in `find $TARGET_DIR -type f -iname \*gc\*log\*`; do
             if [[ ${file} != *".garbagecat-report" ]] && [[ ${file} != *".yass"* ]]; then
                 wait_for_pids
-                echo "    Summarizing $file with $GARBAGECAT"
+                echo "    Summarizing $FILE_PREFIX$file with $GARBAGECAT"
                 $JAVA $JAVA_OPTS -jar $GARBAGECAT $GARBAGECAT_OPTS $file -o $file.garbagecat-report &
                 gc_pids+=($!)
                 NUMBER_GC_LOGS=$((NUMBER_GC_LOGS+1))
@@ -341,11 +342,13 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$SERVER" = "true" ]; then
     echo | tee -a $TARGET_DIR/server-log.yass-report
     if [ $NUMBER_SERVER_LOGS -gt 0 ]; then
         for file in `find $TARGET_DIR -type f -iname \*.yala`; do
-                echo -e "${YELLOW}## Yala highlights of $file ##${NC}"
+                echo -e "${YELLOW}## Yala highlights of $FILE_PREFIX$file ##${NC}"
                 echo "## Yala highlights of $file ##" >> $TARGET_DIR/server-log.yass-report
                 grep -R "*** First and last timestamped lines of" -A 2 $file | tee -a $TARGET_DIR/server-log.yass-report
                 if [ -f $file-errors ]; then 
+                    echo -n "$FILE_PREFIX$file-errors "
                     grep "known ERRORS found of " $file-errors | tee -a $TARGET_DIR/server-log.yass-report
+                    grep "Counts of other errors " $file-errors | tee -a $TARGET_DIR/server-log.yass-report
                 fi
         echo | tee -a $TARGET_DIR/server-log.yass-report
         done
@@ -374,9 +377,9 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$THREAD" = "true" ]; then
         MAX_AVG_NUMBER_REQUESTS=0
 
         for file in `find $TARGET_DIR -type f -iname \*.yatda`; do
-            echo -e "${YELLOW}## Yatda summary of $file ##${NC}"
+            echo -e "${YELLOW}## Yatda summary of $FILE_PREFIX$file ##${NC}"
             echo "## Yatda summary of $file ##" >> $TARGET_DIR/thread-dump.yass-report
-            sed -n -e '/Number of thread dumps:/,/Specific findings/ p' $file | grep -v "Specific findings" | tee -a $TARGET_DIR/thread-dump.yass-report
+            sed -n -e '/### Summary of/,/Specific findings/ p' $file | grep -v "Specific findings" | tee -a $TARGET_DIR/thread-dump.yass-report
             sed -n -e '/Request thread states/,/Most common from first/ p' $file | grep -v "Most common from first" | tee -a $TARGET_DIR/thread-dump.yass-report
             if [ -f $file-cpu ]; then 
                 grep "Max " -A 1 $file-cpu | tee -a $TARGET_DIR/thread-dump.yass-report
@@ -467,22 +470,22 @@ $MAX_AVG_NUMBER_REQUESTS_FILE"
         echo
         if [ $NUMBER_THREAD_DUMPS -gt 1 ]; then
             echo "* Max number of threads is $MAX_NUMBER_THREADS in files:"
-            echo "$MAX_NUMBER_THREADS_FILE"
+            echo "$FILE_PREFIX$MAX_NUMBER_THREADS_FILE"
             echo
             echo "* Max number of request threads is $MAX_NUMBER_REQUEST_THREADS in files:"
-            echo "$MAX_NUMBER_REQUEST_THREADS_FILE"
+            echo "$FILE_PREFIX$MAX_NUMBER_REQUEST_THREADS_FILE"
             echo
             echo "* Max number of processing requests is $MAX_NUMBER_REQUESTS in files:"
-            echo "$MAX_NUMBER_REQUESTS_FILE"
+            echo "$FILE_PREFIX$MAX_NUMBER_REQUESTS_FILE"
             echo
             echo "* Max average number of threads is $MAX_AVG_NUMBER_THREADS in files:"
-            echo "$MAX_AVG_NUMBER_THREADS_FILE"
+            echo "$FILE_PREFIX$MAX_AVG_NUMBER_THREADS_FILE"
             echo
             echo "* Max average number of request threads is $MAX_AVG_NUMBER_REQUEST_THREADS in files:"
-            echo "$MAX_AVG_NUMBER_REQUEST_THREADS_FILE"
+            echo "$FILE_PREFIX$MAX_AVG_NUMBER_REQUEST_THREADS_FILE"
             echo
             echo "* Max average number of processing requests is $MAX_AVG_NUMBER_REQUESTS in files:"
-            echo "$MAX_AVG_NUMBER_REQUESTS_FILE"
+            echo "$FILE_PREFIX$MAX_AVG_NUMBER_REQUESTS_FILE"
             echo
         fi
     }  | tee -a $TARGET_DIR/thread-dump.yass-report
@@ -511,7 +514,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
     PEAK_NUM5XXs_DATE_FILE=0
     for file in `find $TARGET_DIR -type f -iname \*access\*log\*`; do
         if [[ ${file} != *".yass"* ]]; then
-            echo "    Summarizing $file" | tee $file-summary.yass-access
+            echo "    Summarizing $FILE_PREFIX$file" | tee $file-summary.yass-access
 
             # progress count
             i=0
@@ -571,7 +574,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                     HIGHEST_COMPLETED_DATE=$DATE
                     if [ $COMPLETED -gt $PEAK_COMPLETED ]; then
                         PEAK_COMPLETED=$COMPLETED
-                        PEAK_COMPLETED_DATE_FILE="$DATE in $file"
+                        PEAK_COMPLETED_DATE_FILE="$DATE in $FILE_PREFIX$file"
                     fi
                 fi
 
@@ -592,7 +595,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                     HIGHEST_NUM4XXs_DATE=$DATE
                     if [ $NUM4XXs -gt $PEAK_NUM4XXs ]; then
                         PEAK_NUM4XXs=$NUM4XXs
-                        PEAK_NUM4XXs_DATE_FILE="$DATE in $file"
+                        PEAK_NUM4XXs_DATE_FILE="$DATE in $FILE_PREFIX$file"
                     fi
                 fi
 
@@ -603,7 +606,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                     HIGHEST_NUM5XXs_DATE=$DATE
                     if [ $NUM5XXs -gt $PEAK_NUM5XXs ]; then
                         PEAK_NUM5XXs=$NUM5XXs
-                        PEAK_NUM5XXs_DATE_FILE="$DATE in $file"
+                        PEAK_NUM5XXs_DATE_FILE="$DATE in $FILE_PREFIX$file"
                     fi
                 fi
 
@@ -631,7 +634,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                         HIGHEST_LONG_DATE=$DATE
                         if [ $LONG -gt $PEAK_LONG ]; then
                             PEAK_LONG=$LONG
-                            PEAK_LONG_DATE_FILE="$DATE in $file"
+                            PEAK_LONG_DATE_FILE="$DATE in $FILE_PREFIX$file"
                         fi
                     fi
 
@@ -645,7 +648,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
 
             printf "\033[0K\r"
             echo >> $file-summary.yass-access
-            echo -e "${YELLOW}## Access log summary of $file ##${NC}"
+            echo -e "${YELLOW}## Access log summary of $FILE_PREFIX$file in $FILE_PREFIX$file-summary.yass-access ##${NC}"
             echo "## Access log summary of $file ##" >> $TARGET_DIR/access-log.yass-report
             {
                 echo "* Number of requests: $TOTAL_COMPLETED"
@@ -712,8 +715,11 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$GC" = "true" ]; then
         MAX_PAUSE_MILLIS=0
 
         for file in `find $TARGET_DIR -type f -iname \*.garbagecat-report`; do
-            echo -e "${YELLOW}## Garbagecat GC log summary of $file ##${NC}"
+            echo -e "${YELLOW}## Garbagecat GC log summary of $FILE_PREFIX$file ##${NC}"
             echo "## Garbagecat GC log summary of $file ##" >> $TARGET_DIR/gc-log.yass-report
+            ORIG_GC=`echo $file | sed -E 's/(.*)\.garbagecat-report/\1/g'`
+            echo "* Full file: $FILE_PREFIX$ORIG_GC"
+
             sed -n -E -e '/(JVM|SUMMARY):/,/ANALYSIS:/ p' $file | grep -v "ANALYSIS:" | tee -a $TARGET_DIR/gc-log.yass-report
             echo | tee -a $TARGET_DIR/gc-log.yass-report
 
@@ -752,9 +758,14 @@ $file"
         echo "Number of GC log files: $NUMBER_GC_LOGS"
         if [ $NUMBER_GC_LOGS -gt 1 ]; then
             echo "* Lowest throughput is $LOWEST_THROUGHPUT in files:"
-            echo "$LOWEST_THROUGHPUT_FILE"
+            echo "$FILE_PREFIX$LOWEST_THROUGHPUT_FILE"
+            ORIG_GC=`echo $LOWEST_THROUGHPUT_FILE | sed -E 's/(.*)\.garbagecat-report/\1/g'`
+            echo "* Full file: $FILE_PREFIX$ORIG_GC"
             echo
-            echo "* Max pause is $MAX_PAUSE_SECONDS.$MAX_PAUSE_MILLIS in $MAX_PAUSE_FILE"
+            echo "* Max pause is $MAX_PAUSE_SECONDS.$MAX_PAUSE_MILLIS in $FILE_PREFIX$MAX_PAUSE_FILE"
+            echo "$FILE_PREFIX$MAX_PAUSE_FILE"
+            ORIG_GC=`echo $MAX_PAUSE_FILE | sed -E 's/(.*)\.garbagecat-report/\1/g'`
+            echo "* Full file: $FILE_PREFIX$ORIG_GC"
         fi
     }  | tee -a $TARGET_DIR/gc-log.yass-report
     echo -e "${YELLOW}====== Completed GC summary ======${NC}"
