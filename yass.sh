@@ -41,6 +41,7 @@ usage() {
     echo
     echo "Options:"
     echo " -a, --accessLog         recursively look for and summarize access logs"
+    echo " -d, --download          download files for a specified case number via casegrab"
     echo " -g, --gcLog             recursively look for and summarize GC logs via a specified garbagecat"
     echo " -s, --serverLog         recursively look for and sumarize server logs via a specified yala.sh"
     echo " -t, --threadDump        recursively look for and summarize thread dumps via a specified yatda.sh"
@@ -79,6 +80,14 @@ if [ -d $HOME/.yass ] && [ -f $HOME/.yass/config ]; then
     source $HOME/.yass/config 
 fi
 
+if [ "x$CASE_DIR" = "x" ]; then
+    CASE_DIR="$HOME/support"
+fi
+
+if [ "x$CASEGRAB_SIZE_LIMIT" = "x" ]; then
+    CASEGRAB_SIZE_LIMIT="21474836480"
+fi
+
 # set required variables with default values, if not set in $HOME/.yass/config
 # update options
 [ -z $UPDATE_MODE ] && UPDATE_MODE="force"
@@ -97,7 +106,7 @@ if [ "x$JAVA" = "x" ]; then
 fi
 
 # parse the cli options
-OPTS=$(getopt -o 'a,g,s,t,x,h,u:' --long 'accessLog,gcLog,serverLog,threadDump,extract,help,updateMode:' -n "${YASS_SH}" -- "$@")
+OPTS=$(getopt -o 'a,d:,g,s,t,x,h,u:' --long 'accessLog,download:,gcLog,serverLog,threadDump,extract,help,updateMode:' -n "${YASS_SH}" -- "$@")
 
 # if getopt has a returned an error, exit with the return code of getopt
 res=$?; [ $res -gt 0 ] && exit $res
@@ -113,6 +122,9 @@ while true; do
             ;;
         '-a'|'--accessLog')
             ACCESS="true"; OPTIONS_SET="true"; shift
+            ;;
+        '-d'|'--download')
+            CASE_ID=$2; shift 2
             ;;
         '-g'|'--gcLog')
             GC="true"; OPTIONS_SET="true"; shift
@@ -204,14 +216,30 @@ if [ "$UPDATE_MODE" != "never" ]; then
     echo "Checks complete."
 fi
 
+
+# First download any files via casegrab
+if [ "x$CASE_ID" != "x" ]; then
+    casegrab -h > /dev/null
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}casegrab command not found.  Cannot successfully download case files.  Ensure casegrab package is installed.${NC}"
+    else
+        casegrab -d -m $CASEGRAB_SIZE_LIMIT --case-dir $CASE_DIR/$CASE_ID $CASE_ID
+        result=$?
+        if [ $result -gt 0 ]; then
+            echo "Failed to download via casegrab"
+            exit $result
+        fi
+        TARGET_DIR=$CASE_DIR/$CASE_ID
+    fi
+fi
+
 if [ ! -d "$TARGET_DIR" ]; then
     usage "${YELLOW}<DIRECTORY> '$TARGET_DIR' does not exist.${NC}"
     exit
 fi
 
 
-
-# First extract any files
+# Next extract any files
 if [ "$OPTIONS_SET" = "false" ] || [ "$EXTRACT" = "true" ]; then
     aunpack --version > /dev/null
     if [ $? -ne 0 ]; then
@@ -223,12 +251,15 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$EXTRACT" = "true" ]; then
             pids=()
             CHECK_FILES=false
             for file in `find $TARGET_DIR -type f \( -iname \*.zip -o -iname \*.7z -o -iname \*.Z -o -iname \*.gz -o -iname \*.rar  -o -iname \*.bz2 -o -iname \*.xz -o -iname \*.tar -o -iname \*.tar.bz2 -o -iname \*.tar.gz -o -iname \*.tar.xz  -o -iname \*.tgz -o -iname \*.tbz2 \)`; do
-                echo "    Extracting $file"
-                mkdir $file-extract
-                aunpack -X $file-extract $file; rm -rf $file &
-                pids+=($!)
-                # We extracted, so check again in case there were nested compressed archives
-                CHECK_FILES=true
+                # don't unpack sosreports
+                if [[ ${file} != *"sosreport"* ]]; then
+                    echo "    Extracting $file"
+                    mkdir $file-extract
+                    aunpack -X $file-extract $file; rm -rf $file &
+                    pids+=($!)
+                    # We extracted, so check again in case there were nested compressed archives
+                    CHECK_FILES=true
+                fi
             done
 
             # wait for all extract pids
@@ -266,7 +297,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$SERVER" = "true" ]; then
         echo -e "${GREEN}## Finding and summarizing server logs in $TARGET_DIR with $YALA_SH ##${NC}"
         NUMBER_SERVER_LOGS=0
         server_pids=()
-        for file in `find $TARGET_DIR -type f -iname \*server\*log\*`; do
+        for file in `find $TARGET_DIR -type f -iname \*server\*log\* | grep -v "/\.archive"`; do
             if [[ ${file} != *".yala"* ]] && [[ ${file} != *".yass"* ]]; then
                 echo "    Summarizing $FILE_PREFIX$file with $YALA_SH"
                 #$YALA_SH -u never $file > $file.yala-summary &
@@ -288,7 +319,8 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$THREAD" = "true" ]; then
     else
         echo -e "${GREEN}## Finding and summarizing thread dump files in $TARGET_DIR with $YATDA_SH ##${NC}"
         NUMBER_THREAD_DUMPS=0
-        for file in `grep -lR "Full thread dump " $TARGET_DIR`; do
+        # exclude a .archive subdirectory casegrab could create
+        for file in `grep -lR "Full thread dump " $TARGET_DIR | grep -v "/\.archive"`; do
             isFile=`file $file | grep "ASCII text"`
             if [ "$isFile" != "" ]; then
                 echo "    Summarizing $FILE_PREFIX$file with $YATDA_SH"
@@ -313,7 +345,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$GC" = "true" ]; then
         i=0
         gc_pids=()
         NUMBER_GC_LOGS=0
-        for file in `find $TARGET_DIR -type f -iname \*gc\*log\*`; do
+        for file in `find $TARGET_DIR -type f -iname \*gc\*log\* | grep -v "/\.archive"`; do
             if [[ ${file} != *".garbagecat-report" ]] && [[ ${file} != *".yass"* ]]; then
                 wait_for_pids
                 echo "    Summarizing $FILE_PREFIX$file with $GARBAGECAT"
@@ -346,9 +378,11 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$SERVER" = "true" ]; then
                 echo "## Yala highlights of $file ##" >> $TARGET_DIR/server-log.yass-report
                 grep -R "*** First and last timestamped lines of" -A 2 $file | tee -a $TARGET_DIR/server-log.yass-report
                 if [ -f $file-errors ]; then 
-                    echo -n "$FILE_PREFIX$file-errors "
+                    echo -n -e "${GREEN}"
+                    echo "$FILE_PREFIX$file-errors " | tee -a $TARGET_DIR/server-log.yass-report
+                    echo -n -e "${NC}"
                     grep "known ERRORS found of " $file-errors | tee -a $TARGET_DIR/server-log.yass-report
-                    grep "Counts of other errors " $file-errors | tee -a $TARGET_DIR/server-log.yass-report
+                    grep "Counts of other errors " -A 5 $file-errors | tee -a $TARGET_DIR/server-log.yass-report
                 fi
         echo | tee -a $TARGET_DIR/server-log.yass-report
         done
@@ -565,7 +599,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                 i=$((i+1))
                 DATE=`echo $current | sed -E 's/.*yass-access-tmp\.(.*)/\1/g'`
                 COMPLETED=`cat $current | wc -l`
-                printf "$i of $DATE_COUNT minute stamps - $current\033[0K\r"
+                printf "$i of $DATE_COUNT minute stamps\033[0K\r"
 
 
                 TOTAL_COMPLETED=$((TOTAL_COMPLETED + COMPLETED))
@@ -728,10 +762,10 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$GC" = "true" ]; then
             if [ "$THROUGHPUT" != "" ]; then
                 if [ $THROUGHPUT -lt $LOWEST_THROUGHPUT ]; then
                     LOWEST_THROUGHPUT=$THROUGHPUT
-                    LOWEST_THROUGHPUT_FILE=$file
+                    LOWEST_THROUGHPUT_FILE=$FILE_PREFIX$file
                 elif [ $THROUGHPUT -eq $LOWEST_THROUGHPUT ]; then
                     LOWEST_THROUGHPUT_FILE="$LOWEST_THROUGHPUT_FILE
-$file"
+$FILE_PREFIX$file"
                 fi
 
                 # Track max pause to report
@@ -741,10 +775,10 @@ $file"
                 if [ $PAUSE_SECONDS -gt $MAX_PAUSE_SECONDS ]; then
                     MAX_PAUSE_SECONDS=$PAUSE_SECONDS
                     MAX_PAUSE_MILLIS=$PAUSE_MILLIS
-                    MAX_PAUSE_FILE=$file
+                    MAX_PAUSE_FILE=$FILE_PREFIX$file
                 elif [ $PAUSE_SECONDS -eq $MAX_PAUSE_SECONDS ]  && [ $PAUSE_MILLIS -gt $MAX_PAUSE_MILLIS ]; then
                     MAX_PAUSE_MILLIS=$PAUSE_MILLIS
-                    MAX_PAUSE_FILE=$file
+                    MAX_PAUSE_FILE=$FILE_PREFIX$file
                 fi
             fi
         done
@@ -757,15 +791,13 @@ $file"
     {
         echo "Number of GC log files: $NUMBER_GC_LOGS"
         if [ $NUMBER_GC_LOGS -gt 1 ]; then
-            echo "* Lowest throughput is $LOWEST_THROUGHPUT in files:"
-            echo "$FILE_PREFIX$LOWEST_THROUGHPUT_FILE"
+            echo "* Lowest throughput is $LOWEST_THROUGHPUT in files: $LOWEST_THROUGHPUT_FILE"
             ORIG_GC=`echo $LOWEST_THROUGHPUT_FILE | sed -E 's/(.*)\.garbagecat-report/\1/g'`
-            echo "* Full file: $FILE_PREFIX$ORIG_GC"
+            echo "* Full file: $ORIG_GC"
             echo
-            echo "* Max pause is $MAX_PAUSE_SECONDS.$MAX_PAUSE_MILLIS in $FILE_PREFIX$MAX_PAUSE_FILE"
-            echo "$FILE_PREFIX$MAX_PAUSE_FILE"
+            echo "* Max pause is $MAX_PAUSE_SECONDS.$MAX_PAUSE_MILLIS in $MAX_PAUSE_FILE"
             ORIG_GC=`echo $MAX_PAUSE_FILE | sed -E 's/(.*)\.garbagecat-report/\1/g'`
-            echo "* Full file: $FILE_PREFIX$ORIG_GC"
+            echo "* Full file: $ORIG_GC"
         fi
     }  | tee -a $TARGET_DIR/gc-log.yass-report
     echo -e "${YELLOW}====== Completed GC summary ======${NC}"
