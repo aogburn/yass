@@ -546,7 +546,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
     PEAK_NUM4XXs_DATE_FILE=0
     PEAK_NUM5XXs=0
     PEAK_NUM5XXs_DATE_FILE=0
-    for file in `find $TARGET_DIR -type f -iname \*access\*log\*`; do
+    for file in `find $TARGET_DIR -type f -iname \*access\*log\* | grep -v "/\.archive"`; do
         if [[ ${file} != *".yass"* ]]; then
             echo "    Summarizing $FILE_PREFIX$file" | tee $file-summary.yass-access
 
