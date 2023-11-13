@@ -43,6 +43,7 @@ usage() {
     echo " -a, --accessLog         recursively look for and summarize access logs"
     echo " -d, --download          download files for a specified case number via casegrab"
     echo " -g, --gcLog             recursively look for and summarize GC logs via a specified garbagecat"
+    echo " -k, --krashPad          recursively look for hs_err_pid files and summarize via krashpad"
     echo " -s, --serverLog         recursively look for and sumarize server logs via a specified yala.sh"
     echo " -t, --threadDump        recursively look for and summarize thread dumps via a specified yatda.sh"
     echo " -u, --updateMode        the update mode to use, one of [${VALID_UPDATE_MODES[*]}], default: force"
@@ -88,6 +89,7 @@ if [ "x$CASEGRAB_SIZE_LIMIT" = "x" ]; then
     CASEGRAB_SIZE_LIMIT="21474836480"
 fi
 
+
 # set required variables with default values, if not set in $HOME/.yass/config
 # update options
 [ -z $UPDATE_MODE ] && UPDATE_MODE="force"
@@ -106,7 +108,7 @@ if [ "x$JAVA" = "x" ]; then
 fi
 
 # parse the cli options
-OPTS=$(getopt -o 'a,d:,g,s,t,x,h,u:' --long 'accessLog,download:,gcLog,serverLog,threadDump,extract,help,updateMode:' -n "${YASS_SH}" -- "$@")
+OPTS=$(getopt -o 'a,d:,g,k,s,t,x,h,u:' --long 'accessLog,download:,gcLog,serverLog,threadDump,extract,help,updateMode:' -n "${YASS_SH}" -- "$@")
 
 # if getopt has a returned an error, exit with the return code of getopt
 res=$?; [ $res -gt 0 ] && exit $res
@@ -128,6 +130,9 @@ while true; do
             ;;
         '-g'|'--gcLog')
             GC="true"; OPTIONS_SET="true"; shift
+            ;;
+        '-k'|'--krashPad')
+            KRASH="true"; OPTIONS_SET="true"; shift
             ;;
         '-s'|'--serverLog')
             SERVER="true"; OPTIONS_SET="true"; shift
@@ -164,6 +169,7 @@ else
     # otherwise after parsing the options, '$1' is the directory name
     TARGET_DIR=$1
 fi
+
 
 EXT=".yass"
 DIR=`dirname "$(readlink -f "$0")"`
@@ -334,6 +340,25 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$THREAD" = "true" ]; then
     echo
 fi
 
+
+
+# Summarize hs_err_pid crash files
+if [ "$OPTIONS_SET" = "false" ] || [ "$KRASH" = "true" ]; then
+    echo -e "${GREEN}## Finding and summarizing hs_err_pid files in $TARGET_DIR with krashpad ##${NC}"
+    # exclude a .archive subdirectory casegrab could create
+    NUMBER_HS_ERR_PIDS=0
+    for file in `find $TARGET_DIR -type f -iname \*hs_err_pid\* | grep -v "/\.archive" | grep -v "hs_err_pid.*\.pad" | grep -v ".*\.yass"`; do
+        echo "    Summarizing $FILE_PREFIX$file with krashpad to $FILE_PREFIX$file.pad"
+        NUMBER_HS_ERR_PIDS=$((NUMBER_HS_ERR_PIDS+1))
+        if [ x"$KRASHPAD_CMD" == x ]; then
+            KRASHPAD_FILE_DIR=`dirname "$(readlink -f "$file")"`
+            docker run --pull=always -v $KRASHPAD_FILE_DIR:$KRASHPAD_FILE_DIR:z ghcr.io/mgm3746/krashpad:main -c $file &> $file.pad
+        else
+            $KRASHPAD_CMD -c $file > $file.pad &
+        fi
+    done
+    echo
+fi
 
 
 # Summarize gc logs
@@ -802,4 +827,20 @@ $FILE_PREFIX$file"
     }  | tee -a $TARGET_DIR/gc-log.yass-report
     echo -e "${YELLOW}====== Completed GC summary ======${NC}"
     echo "====== Completed GC summary ======" >> $TARGET_DIR/gc-log.yass-report
+
+
+    echo -e "${YELLOW}====== Final hs_err_pid summary ======${NC}"
+    echo "====== Final hs_err_pid summary ======" >> $TARGET_DIR/hs_err_pid.yass-report
+    # Output low & max
+    {
+        echo "Number of hs_err_pid files: $NUMBER_HS_ERR_PIDS"
+        if [ $NUMBER_HS_ERR_PIDS -gt 0 ]; then
+            for file in `find $TARGET_DIR -type f -iname \*hs_err_pid\*.pad`; do
+                echo "$FILE_PREFIX$file"
+            done
+        fi
+
+    }  | tee -a $TARGET_DIR/hs_err_pid.yass-report
+    echo -e "${YELLOW}====== Completed hs_err_pid summary ======${NC}"
+    echo "====== Completed hs_err_pid summary ======" >> $TARGET_DIR/gc-log.yass-report
 fi 

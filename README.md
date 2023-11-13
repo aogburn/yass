@@ -35,7 +35,9 @@ Or you may specify the directory to run against:
 * Options include all of the flags mentioned below.  All analysis options would be used by default.  If you specify any option, then analysis will only be done for the explictly set flags (
 ```
  -a, --accessLog         recursively look for and summarize access logs
+ -d, --download          download files for a specified case number via casegrab
  -g, --gcLog             recursively look for and summarize GC logs via a specified garbagecat
+ -k, --krashPad          recursively look for hs_err_pid files and summarize via krashpad
  -s, --serverLog         recursively look for and sumarize server logs via a specified yala.sh
  -t, --threadDump        recursively look for and summarize thread dumps via a specified yatda.sh
  -u, --updateMode        the update mode to use, one of [${VALID_UPDATE_MODES[*]}], default: force
