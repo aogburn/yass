@@ -827,8 +827,9 @@ $FILE_PREFIX$file"
     }  | tee -a $TARGET_DIR/gc-log.yass-report
     echo -e "${YELLOW}====== Completed GC summary ======${NC}"
     echo "====== Completed GC summary ======" >> $TARGET_DIR/gc-log.yass-report
+fi
 
-
+if [ "$OPTIONS_SET" = "false" ] || [ "$KRASH" = "true" ]; then
     echo -e "${YELLOW}====== Final hs_err_pid summary ======${NC}"
     echo "====== Final hs_err_pid summary ======" >> $TARGET_DIR/hs_err_pid.yass-report
     # Output low & max
