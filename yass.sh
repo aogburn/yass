@@ -175,6 +175,7 @@ EXT=".yass"
 DIR=`dirname "$(readlink -f "$0")"`
 DEST=$TARGET_DIR/summary$EXT
 FILE_PREFIX="file://"
+DATESTAMP=`date '+%Y-%m-%d'`
 
 # Colors
 export RED='\033[0;31m'
@@ -229,7 +230,7 @@ if [ "x$CASE_ID" != "x" ]; then
     if [ $? -ne 0 ]; then
         echo -e "${RED}casegrab command not found.  Cannot successfully download case files.  Ensure casegrab package is installed.${NC}"
     else
-        casegrab -d -m $CASEGRAB_SIZE_LIMIT --case-dir $CASE_DIR/$CASE_ID $CASE_ID
+        casegrab -d -m $CASEGRAB_SIZE_LIMIT --case-dir $CASE_DIR/$CASE_ID/$DATESTAMP $CASE_ID
         result=$?
         if [ $result -gt 0 ]; then
             echo "Failed to download via casegrab"
