@@ -236,7 +236,7 @@ if [ "x$CASE_ID" != "x" ]; then
             echo "Failed to download via casegrab"
             exit $result
         fi
-        TARGET_DIR=$CASE_DIR/$CASE_ID
+        TARGET_DIR=$CASE_DIR/$CASE_ID/$DATESTAMP
     fi
 fi
 
