@@ -230,12 +230,14 @@ if [ "x$CASE_ID" != "x" ]; then
     if [ $? -ne 0 ]; then
         echo -e "${RED}casegrab command not found.  Cannot successfully download case files.  Ensure casegrab package is installed.${NC}"
     else
-        casegrab -d -m $CASEGRAB_SIZE_LIMIT --case-dir $CASE_DIR/$CASE_ID/$DATESTAMP $CASE_ID
+        casegrab -d -m $CASEGRAB_SIZE_LIMIT --case-dir $CASE_DIR/$CASE_ID/.latest $CASE_ID
         result=$?
         if [ $result -gt 0 ]; then
             echo "Failed to download via casegrab"
             exit $result
         fi
+        mkdir $CASE_DIR/$CASE_ID/$DATESTAMP
+        mv $CASE_DIR/$CASE_ID/.latest/* $CASE_DIR/$CASE_ID/$DATESTAMP/
         TARGET_DIR=$CASE_DIR/$CASE_ID/$DATESTAMP
     fi
 fi
