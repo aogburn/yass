@@ -36,6 +36,7 @@ Or you may specify the directory to run against:
 ```
  -a, --accessLog         recursively look for and summarize access logs
  -d, --download          download files for a specified case number via casegrab
+ -e, --heapDump          recursively look for hprof/bin heap dump files and launch MAT if specified against the largest
  -g, --gcLog             recursively look for and summarize GC logs via a specified garbagecat
  -k, --krashPad          recursively look for hs_err_pid files and summarize via krashpad
  -s, --serverLog         recursively look for and sumarize server logs via a specified yala.sh

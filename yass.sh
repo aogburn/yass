@@ -42,6 +42,7 @@ usage() {
     echo "Options:"
     echo " -a, --accessLog         recursively look for and summarize access logs"
     echo " -d, --download          download files for a specified case number via casegrab"
+    echo " -e, --heapDump          recursively look for hprof/bin heap dump files and launch eclipse MAT if specified against the largest"
     echo " -g, --gcLog             recursively look for and summarize GC logs via a specified garbagecat"
     echo " -k, --krashPad          recursively look for hs_err_pid files and summarize via krashpad"
     echo " -s, --serverLog         recursively look for and sumarize server logs via a specified yala.sh"
@@ -108,7 +109,7 @@ if [ "x$JAVA" = "x" ]; then
 fi
 
 # parse the cli options
-OPTS=$(getopt -o 'a,d:,g,k,s,t,x,h,u:' --long 'accessLog,download:,gcLog,serverLog,threadDump,extract,help,updateMode:' -n "${YASS_SH}" -- "$@")
+OPTS=$(getopt -o 'a,d:,e,g,k,s,t,x,h,u:' --long 'accessLog,download:,heapDumpgcLog,serverLog,threadDump,extract,help,updateMode:' -n "${YASS_SH}" -- "$@")
 
 # if getopt has a returned an error, exit with the return code of getopt
 res=$?; [ $res -gt 0 ] && exit $res
@@ -127,6 +128,9 @@ while true; do
             ;;
         '-d'|'--download')
             CASE_ID=$2; shift 2
+            ;;
+        '-e'|'--heapDump')
+            HEAP_DUMP="true"; OPTIONS_SET="true"; shift
             ;;
         '-g'|'--gcLog')
             GC="true"; OPTIONS_SET="true"; shift
@@ -832,19 +836,59 @@ $FILE_PREFIX$file"
     echo "====== Completed GC summary ======" >> $TARGET_DIR/gc-log.yass-report
 fi
 
+
+
 if [ "$OPTIONS_SET" = "false" ] || [ "$KRASH" = "true" ]; then
-    echo -e "${YELLOW}====== Final hs_err_pid summary ======${NC}"
-    echo "====== Final hs_err_pid summary ======" >> $TARGET_DIR/hs_err_pid.yass-report
-    # Output low & max
-    {
-        echo "Number of hs_err_pid files: $NUMBER_HS_ERR_PIDS"
-        if [ $NUMBER_HS_ERR_PIDS -gt 0 ]; then
+    if [ $NUMBER_HS_ERR_PIDS -gt 0 ]; then
+        echo -e "${YELLOW}====== Final hs_err_pid summary ======${NC}"
+        echo "====== Final hs_err_pid summary ======" >> $TARGET_DIR/hs_err_pid.yass-report
+        {
+            echo "Number of hs_err_pid files: $NUMBER_HS_ERR_PIDS"
             for file in `find $TARGET_DIR -type f -iname \*hs_err_pid\*.pad`; do
                 echo "$FILE_PREFIX$file"
             done
-        fi
+        }  | tee -a $TARGET_DIR/hs_err_pid.yass-report
+        echo -e "${YELLOW}====== Completed hs_err_pid summary ======${NC}"
+        echo "====== Completed hs_err_pid summary ======" >> $TARGET_DIR/hs_err_pid.yass-report
+    fi
+fi
 
-    }  | tee -a $TARGET_DIR/hs_err_pid.yass-report
-    echo -e "${YELLOW}====== Completed hs_err_pid summary ======${NC}"
-    echo "====== Completed hs_err_pid summary ======" >> $TARGET_DIR/gc-log.yass-report
-fi 
+
+# Find and count heap dumps
+if [ "$OPTIONS_SET" = "false" ] || [ "$HEAP_DUMP" = "true" ]; then
+    #NUMBER_HEAP_DUMPS=`find $TARGET_DIR -type f -iname \*.hprof  -o -iname \*.bin | wc -l`
+    NUMBER_HEAP_DUMPS=`grep -lR "JAVA PROFILE" $TARGET_DIR | grep -v "/\.archive" | wc -l`
+    if [ $NUMBER_HEAP_DUMPS -gt 0 ]; then
+        echo -e "${YELLOW}====== Final heap dump summary ======${NC}"
+        echo "====== Final heap dump summary ======" >> $TARGET_DIR/heap-dump.yass-report
+        {
+            LARGEST_HEAP_DUMP_SIZE=0
+            echo "Number of heap dump files: $NUMBER_HEAP_DUMPS"
+            #for file in `find $TARGET_DIR -type f -iname \*.hprof -o -iname \*.bin`; do
+            for file in `grep -lR "JAVA PROFILE" $TARGET_DIR | grep -v "/\.archive"`; do
+                file_size=`stat -c%s $file`
+                echo "    $file - $file_size bytes"
+                if [ $file_size -gt $LARGEST_HEAP_DUMP_SIZE ]; then
+                    LARGEST_HEAP_DUMP_SIZE=$file_size
+                    LARGEST_HEAP_DUMP_FILE=$file
+                fi
+            done
+
+            if [ $NUMBER_HEAP_DUMPS -gt 1 ]; then
+                echo "* Largest dump is $LARGEST_HEAP_DUMP_FILE - $LARGEST_HEAP_DUMP_SIZE bytes"
+            fi
+
+            if [ x"$MAT" == x ]; then
+                echo -e "${RED}<MAT> variable not specified.  Cannot launch heap dump analysis.  Specify <MAT> in $HOME/.yass/config to launch analysis of largest found dump.${NC}"
+            else
+                $MAT $LARGEST_HEAP_DUMP_FILE &> /dev/null &
+                MAT_PID=$!
+                echo "* Launched pid $MAT_PID running $MAT to load $LARGEST_HEAP_DUMP_FILE"
+        fi
+        }  | tee -a $TARGET_DIR/heap-dump.yass-report
+
+
+        echo -e "${YELLOW}====== Completed heap dump summary ======${NC}"
+        echo "====== Completed heap dump summary ======" >> $TARGET_DIR/heap-dump.yass-report
+    fi
+fi
