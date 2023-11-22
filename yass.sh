@@ -90,6 +90,10 @@ if [ "x$CASEGRAB_SIZE_LIMIT" = "x" ]; then
     CASEGRAB_SIZE_LIMIT="21474836480"
 fi
 
+if [ "x$ACCESS_LOG_LIMIT" = "x" ]; then
+    ACCESS_LOG_LIMIT="7200"
+fi
+
 
 # set required variables with default values, if not set in $HOME/.yass/config
 # update options
@@ -621,6 +625,12 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                 echo "=================================================================================================================================================" >> $file-summary.yass-access
             fi
 
+            # preliminary sanity check on the access log's number of unique datestamps to the minute
+            DATE_COUNT=`sed -E 's/.*(\[.*:[0-2][0-9]:[0-5][0-9]):.*\].*/\1/g' $file | uniq | wc -l`
+
+            if [ $DATE_COUNT -gt $ACCESS_LOG_LIMIT ]; then
+                echo -e "${RED} $file covers $DATE_COUNT unique minute date stamps, exceeding the limit of $ACCESS_LOG_LIMIT. Skipping to avoid excessive processing.  Trim the file to more specific desired dates to analyze. ${NC}"
+            else
             #temporarily split each minute to a separate file
             awk -v f="$tmp" -F '[\\[/:]' '{print > f "." $2 ":" $3 ":" $4 ":" $5 ":" $6}' $file
             #for x in $DATES; do
@@ -739,6 +749,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
             } | tee -a $TARGET_DIR/access-log.yass-report
             rm -rf $tmp*
             NUMBER_ACCESS_LOGS=$((NUMBER_ACCESS_LOGS+1))
+            fi
         fi
     done
 
@@ -878,13 +889,16 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$HEAP_DUMP" = "true" ]; then
                 echo "* Largest dump is $LARGEST_HEAP_DUMP_FILE - $LARGEST_HEAP_DUMP_SIZE bytes"
             fi
 
-            if [ x"$MAT" == x ]; then
-                echo -e "${RED}<MAT> variable not specified.  Cannot launch heap dump analysis.  Specify <MAT> in $HOME/.yass/config to launch analysis of largest found dump.${NC}"
-            else
-                $MAT $LARGEST_HEAP_DUMP_FILE &> /dev/null &
-                MAT_PID=$!
-                echo "* Launched pid $MAT_PID running $MAT to load $LARGEST_HEAP_DUMP_FILE"
-        fi
+            # Attempt to launch mat for the largest heap dump after new downloads
+            if [ x"$CASE_ID" != x ]; then
+                if [ x"$MAT" == x ]; then
+                    echo -e "${RED}<MAT> variable not specified.  Cannot launch heap dump analysis.  Specify <MAT> in $HOME/.yass/config to launch analysis of largest found dump.${NC}"
+                else
+                    $MAT $LARGEST_HEAP_DUMP_FILE &> /dev/null &
+                    MAT_PID=$!
+                    echo "* Launched pid $MAT_PID running $MAT to load $LARGEST_HEAP_DUMP_FILE"
+                fi
+            fi
         }  | tee -a $TARGET_DIR/heap-dump.yass-report
 
 

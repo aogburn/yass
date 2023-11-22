@@ -7,15 +7,16 @@ Yass is just 'Yet Another Script' Script.  It is a main script to call and more 
 wget https://raw.githubusercontent.com/aogburn/yass/main/yass.sh
 chmod 755 yass.sh
 ```
-* Install the atool package to provide the aunpack command used to easily uncompress various file types.  And also install other compression libraries:
+* Install the atool package to provide the aunpack command used to easily uncompress various file types.  And also install other compression libraries and docker to be able to run krashpad:
 ```
-yum install atool unzip gzip bzip2 tar p7zip ncompress
+yum install atool unzip gzip bzip2 tar p7zip ncompress docker
 ```
 * Create a $HOME/.yass/config file like the example.config and specify variables below to indicate the locations of these tools:
 ```
 GARBAGECAT=/path/to/garbagecat.jar
 YALA_SH=/path/to/yala.sh
 YATDA_SH=/path/to/yatda.sh
+MAT=/path/to/eclipse/mat/MemoryAnalyzer
 ```
 
 # updating 
