@@ -618,7 +618,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                 echo -e "${RED} $file does not contain a standard format with the date/time in the expected position.  Skipping for analysis. ${NC}"
             else
                 # preliminary sanity check on the access log's number of unique datestamps to the minute
-                DATE_COUNT=`sed -E 's/.*(\[.*:[0-2][0-9]:[0-5][0-9]):.*\].*/\1/g' $file | uniq | wc -l`
+                DATE_COUNT=`sed -E 's/.*(\[.*:[0-2][0-9]:[0-5][0-9]):.*\].*/\1/g' $file | uniq | sort -n | uniq | wc -l`
 
                 if [ $DATE_COUNT -gt $ACCESS_LOG_LIMIT ]; then
                     echo -e "${RED} $file covers $DATE_COUNT unique minute date stamps, exceeding the limit of $ACCESS_LOG_LIMIT. Skipping to avoid excessive processing.  Trim the file to more specific desired dates to analyze. ${NC}"
