@@ -430,10 +430,12 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$SERVER" = "true" ]; then
 
     # highlight of yalas
     echo -e "${YELLOW}====== Server log yala summaries ======${NC}"
-    echo "====== Server log yala summaries ======" > $TARGET_DIR/server-log.yass-report
-    echo "Number of server log files: $NUMBER_SERVER_LOGS" | tee -a $TARGET_DIR/server-log.yass-report
-    echo | tee -a $TARGET_DIR/server-log.yass-report
+    echo "Number of server log files: $NUMBER_SERVER_LOGS"
     if [ $NUMBER_SERVER_LOGS -gt 0 ]; then
+        echo "====== Server log yala summaries ======" > $TARGET_DIR/server-log.yass-report
+        echo "Number of server log files: $NUMBER_SERVER_LOGS" >> tee -a $TARGET_DIR/server-log.yass-report
+        echo | tee -a $TARGET_DIR/server-log.yass-report
+
         for file in `find $TARGET_DIR -type f -iname \*.yala`; do
                 echo -e "${YELLOW}## Yala highlights of $FILE_PREFIX$file ##${NC}"
                 echo "## Yala highlights of $file ##" >> $TARGET_DIR/server-log.yass-report
@@ -460,9 +462,10 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$THREAD" = "true" ]; then
 
     # highlight of yatdas
     echo -e "${YELLOW}====== Thread dump yatda summaries ======${NC}"
-    echo "====== Thread dump yatda summaries ======" > $TARGET_DIR/thread-dump.yass-report
-    echo | tee -a $TARGET_DIR/thread-dump.yass-report
+    echo
     if [ $NUMBER_THREAD_DUMPS -gt 0 ]; then
+        echo "====== Thread dump yatda summaries ======" > $TARGET_DIR/thread-dump.yass-report
+        echo | tee -a $TARGET_DIR/thread-dump.yass-report
 
         MAX_NUMBER_THREADS=0
         MAX_NUMBER_REQUEST_THREADS=0
@@ -559,11 +562,13 @@ $MAX_AVG_NUMBER_REQUESTS_FILE"
     fi
 
     echo -e "${YELLOW}====== Final thread dump summary ======${NC}"
-    echo "====== Final thread dump summary ======" >> $TARGET_DIR/thread-dump.yass-report
-    {
-        echo "Number of thread dump files: $NUMBER_THREAD_DUMPS"
-        echo
-        if [ $NUMBER_THREAD_DUMPS -gt 1 ]; then
+    echo "Number of thread dump files: $NUMBER_THREAD_DUMPS"
+    echo
+    if [ $NUMBER_THREAD_DUMPS -gt 1 ]; then
+        {
+            echo "====== Final thread dump summary ======" >> $TARGET_DIR/thread-dump.yass-report
+            echo "Number of thread dump files: $NUMBER_THREAD_DUMPS" >> $TARGET_DIR/thread-dump.yass-report
+
             echo "* Max number of threads is $MAX_NUMBER_THREADS in files:"
             echo "$FILE_PREFIX$MAX_NUMBER_THREADS_FILE"
             echo
@@ -582,17 +587,16 @@ $MAX_AVG_NUMBER_REQUESTS_FILE"
             echo "* Max average number of processing requests is $MAX_AVG_NUMBER_REQUESTS in files:"
             echo "$FILE_PREFIX$MAX_AVG_NUMBER_REQUESTS_FILE"
             echo
-        fi
-    }  | tee -a $TARGET_DIR/thread-dump.yass-report
+        }  | tee -a $TARGET_DIR/thread-dump.yass-report
+        echo "====== Completed thread dump summary ======" >> $TARGET_DIR/thread-dump.yass-report
+    fi
     echo -e "${YELLOW}====== Completed thread dump summary ======${NC}"
-    echo "====== Completed thread dump summary ======" >> $TARGET_DIR/thread-dump.yass-report
 fi
 
 
 # Summarize access logs
 if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
     echo -e "${GREEN}## Finding and summarizing access files in $TARGET_DIR  ##${NC}"
-    echo -e "## Summarizing access files in $TARGET_DIR  ##" > $TARGET_DIR/access-log.yass-report
     echo
     #peaks across all access logs
     ANY_RESPONSE_TIMES=0
@@ -788,20 +792,22 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
 
 
     echo -e "${YELLOW}====== Final access log summary ======${NC}"
-    echo "====== Final access log summary ======" >> $TARGET_DIR/access-log.yass-report
-    {
-        echo "Number of access log files: $NUMBER_ACCESS_LOGS"
-        if [ $NUMBER_ACCESS_LOGS -gt 0 ]; then
+    echo "Number of access log files: $NUMBER_ACCESS_LOGS"
+    if [ $NUMBER_ACCESS_LOGS -gt 0 ]; then
+        echo "====== Final access log summary ======" >> $TARGET_DIR/access-log.yass-report
+        echo "Number of access log files: $NUMBER_ACCESS_LOGS" >> $TARGET_DIR/access-log.yass-report
+        {
             echo "* Peak completed request count is $PEAK_COMPLETED at $PEAK_COMPLETED_DATE_FILE"
             if [ $ANY_RESPONSE_TIMES -ne "0" ]; then
                 echo "* Peak long response count is $PEAK_LONG at $PEAK_LONG_DATE_FILE"
             fi
             echo "* Peak number of 4XX responses is $PEAK_NUM4XXs at $PEAK_NUM4XXs_DATE_FILE"
             echo "* Peak number of 5XX responses is $PEAK_NUM5XXs at $PEAK_NUM5XXs_DATE_FILE"
-        fi
-    } | tee -a $TARGET_DIR/access-log.yass-report
+        } | tee -a $TARGET_DIR/access-log.yass-report
+        echo "====== Completed access log summary ======" >> $TARGET_DIR/access-log.yass-report
+    fi
     echo -e "${YELLOW}====== Completed access log summary ======${NC}"
-    echo "====== Completed access log summary ======" >> $TARGET_DIR/access-log.yass-report
+
 fi
 
 
@@ -815,11 +821,11 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$GC" = "true" ]; then
     echo -e "${GREEN}Finished garbagecats${NC}"
 
     # highlight of GC logs
-    echo -e "${YELLOW}====== Garbagecat GC log summaries ======${NC}"
-    echo "====== Garbagecat GC log summaries ======" > $TARGET_DIR/gc-log.yass-report
-    echo | tee -a $TARGET_DIR/gc-log.yass-report
 
     if [ $NUMBER_GC_LOGS -gt 0 ]; then
+        echo -e "${YELLOW}====== Garbagecat GC log summaries ======${NC}"
+        echo "====== Garbagecat GC log summaries ======" > $TARGET_DIR/gc-log.yass-report
+        echo | tee -a $TARGET_DIR/gc-log.yass-report
         LOWEST_THROUGHPUT=100
         MAX_PAUSE_SECONDS=0
         MAX_PAUSE_MILLIS=0
@@ -862,22 +868,26 @@ $FILE_PREFIX$file"
 
 
     echo -e "${YELLOW}====== Final GC summary ======${NC}"
-    echo "====== Final GC summary ======" >> $TARGET_DIR/gc-log.yass-report
-    # Output low & max
-    {
-        echo "Number of GC log files: $NUMBER_GC_LOGS"
-        if [ $NUMBER_GC_LOGS -gt 1 ]; then
-            echo "* Lowest throughput is $LOWEST_THROUGHPUT in files: $LOWEST_THROUGHPUT_FILE"
-            ORIG_GC=`echo $LOWEST_THROUGHPUT_FILE | sed -E 's/(.*)\.garbagecat-report/\1/g'`
-            echo "* Full file: $ORIG_GC"
-            echo
-            echo "* Max pause is $MAX_PAUSE_SECONDS.$MAX_PAUSE_MILLIS in $MAX_PAUSE_FILE"
-            ORIG_GC=`echo $MAX_PAUSE_FILE | sed -E 's/(.*)\.garbagecat-report/\1/g'`
-            echo "* Full file: $ORIG_GC"
-        fi
-    }  | tee -a $TARGET_DIR/gc-log.yass-report
+    echo "Number of GC log files: $NUMBER_GC_LOGS"
+    if [ $NUMBER_GC_LOGS -gt 1 ]; then
+        echo "====== Final GC summary ======" >> $TARGET_DIR/gc-log.yass-report
+        echo "Number of GC log files: $NUMBER_GC_LOGS" >> $TARGET_DIR/gc-log.yass-report
+        # Output low & max
+        {
+            if [ $NUMBER_GC_LOGS -gt 1 ]; then
+                echo "* Lowest throughput is $LOWEST_THROUGHPUT in files: $LOWEST_THROUGHPUT_FILE"
+                ORIG_GC=`echo $LOWEST_THROUGHPUT_FILE | sed -E 's/(.*)\.garbagecat-report/\1/g'`
+                echo "* Full file: $ORIG_GC"
+                echo
+                echo "* Max pause is $MAX_PAUSE_SECONDS.$MAX_PAUSE_MILLIS in $MAX_PAUSE_FILE"
+                ORIG_GC=`echo $MAX_PAUSE_FILE | sed -E 's/(.*)\.garbagecat-report/\1/g'`
+                echo "* Full file: $ORIG_GC"
+            fi
+        } | tee -a $TARGET_DIR/gc-log.yass-report
+        echo "====== Completed GC summary ======" >> $TARGET_DIR/gc-log.yass-report
+    fi
     echo -e "${YELLOW}====== Completed GC summary ======${NC}"
-    echo "====== Completed GC summary ======" >> $TARGET_DIR/gc-log.yass-report
+
 fi
 
 
