@@ -248,9 +248,16 @@ if [ "x$CASE_ID" != "x" ]; then
             echo "Failed to download via casegrab"
             exit $result
         fi
-        mkdir $CASE_DIR/$CASE_ID/$DATESTAMP
-        mv $CASE_DIR/$CASE_ID/.latest/* $CASE_DIR/$CASE_ID/$DATESTAMP/
-        TARGET_DIR=$CASE_DIR/$CASE_ID/$DATESTAMP
+        DOWNLOAD_COUNT=`ls $CASE_DIR/$CASE_ID/.latest/ | wc -l`
+        if [ $DOWNLOAD_COUNT -gt 0 ]; then
+            echo -e "${GREEN}Processing $DOWNLOAD_COUNT files downloaded for $CASE_ID.${NC}"
+            mkdir $CASE_DIR/$CASE_ID/$DATESTAMP
+            mv $CASE_DIR/$CASE_ID/.latest/* $CASE_DIR/$CASE_ID/$DATESTAMP/
+            TARGET_DIR=$CASE_DIR/$CASE_ID/$DATESTAMP
+        else
+            echo -e "${YELLOW}No new files were downloaded for $CASE_ID. Skipping further processing.${NC}"
+            exit
+        fi
     fi
 fi
 
@@ -267,8 +274,8 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$EXTRACT" = "true" ]; then
         echo -e "${RED}aunpack command not found.  Cannot successfully extract files.  Ensure atool package is installed.${NC}"
     else
         CHECK_FILES=true
+        echo -e "${GREEN}Extracting files${NC}"
         while [ $CHECK_FILES == true ]; do
-            echo -e "${GREEN}Extracting files${NC}"
             pids=()
             CHECK_FILES=false
             for file in `find $TARGET_DIR -type f \( -iname \*.zip -o -iname \*.7z -o -iname \*.Z -o -iname \*.gz -o -iname \*.rar  -o -iname \*.bz2 -o -iname \*.xz -o -iname \*.tar -o -iname \*.tar.bz2 -o -iname \*.tar.gz -o -iname \*.tar.xz  -o -iname \*.tgz -o -iname \*.tbz2 \)`; do
