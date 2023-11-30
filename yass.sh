@@ -94,6 +94,9 @@ if [ "x$ACCESS_LOG_LIMIT" = "x" ]; then
     ACCESS_LOG_LIMIT="7200"
 fi
 
+if [ "x$DATESTAMP_CMD" = "x" ]; then
+    DATESTAMP_CMD="date '+%Y-%m-%dT%H-%M'"
+fi
 
 # set required variables with default values, if not set in $HOME/.yass/config
 # update options
@@ -183,7 +186,8 @@ EXT=".yass"
 DIR=`dirname "$(readlink -f "$0")"`
 DEST=$TARGET_DIR/summary$EXT
 FILE_PREFIX="file://"
-DATESTAMP=`date '+%Y-%m-%d'`
+#echo getting datestamp with $DATESTAMP_CMD
+DATESTAMP=`eval $DATESTAMP_CMD`
 
 # Colors
 export RED='\033[0;31m'
