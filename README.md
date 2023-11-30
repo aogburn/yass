@@ -38,8 +38,10 @@ Or you may specify the directory to run against:
  -a, --accessLog         recursively look for and summarize access logs
  -d, --download          download files for a specified case number via casegrab
  -e, --heapDump          recursively look for hprof/bin heap dump files and launch MAT if specified against the largest
+ -f, --file              name of a file/uuid to download via casegrab. This bypasses the max file size setting.
  -g, --gcLog             recursively look for and summarize GC logs via a specified garbagecat
  -k, --krashPad          recursively look for hs_err_pid files and summarize via krashpad
+ -n, --number            download x number of the most recent files via casegrab
  -s, --serverLog         recursively look for and sumarize server logs via a specified yala.sh
  -t, --threadDump        recursively look for and summarize thread dumps via a specified yatda.sh
  -u, --updateMode        the update mode to use, one of [${VALID_UPDATE_MODES[*]}], default: force

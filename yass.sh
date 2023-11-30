@@ -43,8 +43,10 @@ usage() {
     echo " -a, --accessLog         recursively look for and summarize access logs"
     echo " -d, --download          download files for a specified case number via casegrab"
     echo " -e, --heapDump          recursively look for hprof/bin heap dump files and launch eclipse MAT if specified against the largest"
+    echo " -f, --file              name of a file/uuid to download via casegrab. This bypasses the max file size setting."
     echo " -g, --gcLog             recursively look for and summarize GC logs via a specified garbagecat"
     echo " -k, --krashPad          recursively look for hs_err_pid files and summarize via krashpad"
+    echo " -n, --number            download x number of the most recent files via casegrab"
     echo " -s, --serverLog         recursively look for and sumarize server logs via a specified yala.sh"
     echo " -t, --threadDump        recursively look for and summarize thread dumps via a specified yatda.sh"
     echo " -u, --updateMode        the update mode to use, one of [${VALID_UPDATE_MODES[*]}], default: force"
@@ -116,7 +118,7 @@ if [ "x$JAVA" = "x" ]; then
 fi
 
 # parse the cli options
-OPTS=$(getopt -o 'a,d:,e,g,k,s,t,x,h,u:' --long 'accessLog,download:,heapDumpgcLog,serverLog,threadDump,extract,help,updateMode:' -n "${YASS_SH}" -- "$@")
+OPTS=$(getopt -o 'a,d:,e,f:g,k,n:s,t,x,h,u:' --long 'accessLog,download:,heapDump,file:,gcLog,krashPad,number:,serverLog,threadDump,extract,help,updateMode:' -n "${YASS_SH}" -- "$@")
 
 # if getopt has a returned an error, exit with the return code of getopt
 res=$?; [ $res -gt 0 ] && exit $res
@@ -139,11 +141,17 @@ while true; do
         '-e'|'--heapDump')
             HEAP_DUMP="true"; OPTIONS_SET="true"; shift
             ;;
+        '-f'|'--file')
+            CASEGRAB_FILE=$2; shift 2
+            ;;
         '-g'|'--gcLog')
             GC="true"; OPTIONS_SET="true"; shift
             ;;
         '-k'|'--krashPad')
             KRASH="true"; OPTIONS_SET="true"; shift
+            ;;
+        '-n'|'--number')
+            CASEGRAB_NUMBER=$2; shift 2
             ;;
         '-s'|'--serverLog')
             SERVER="true"; OPTIONS_SET="true"; shift
@@ -242,7 +250,13 @@ if [ "x$CASE_ID" != "x" ]; then
     if [ $? -ne 0 ]; then
         echo -e "${RED}casegrab command not found.  Cannot successfully download case files.  Ensure casegrab package is installed.${NC}"
     else
-        casegrab -d -m $CASEGRAB_SIZE_LIMIT --case-dir $CASE_DIR/$CASE_ID/.latest $CASE_ID
+        if [ "x$CASEGRAB_NUMBER" != "x" ]; then
+            casegrab -d -m $CASEGRAB_SIZE_LIMIT -n $CASEGRAB_NUMBER --case-dir $CASE_DIR/$CASE_ID/.latest $CASE_ID
+        elif [ "x$CASEGRAB_FILE" != "x" ]; then
+            casegrab -d -f $CASEGRAB_FILE --case-dir $CASE_DIR/$CASE_ID/.latest $CASE_ID
+        else
+            casegrab -d -m $CASEGRAB_SIZE_LIMIT --case-dir $CASE_DIR/$CASE_ID/.latest $CASE_ID
+        fi
         result=$?
         if [ $result -gt 0 ]; then
             echo "Failed to download via casegrab"
