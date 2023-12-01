@@ -9,7 +9,7 @@
 # Usage: sh ./yass.sh <directory> (or current directory if not specified)
 LC_ALL=C
 
-VALID_UPDATE_MODES=(force ask never)
+VALID_UPDATE_MODES=(force ask never daily)
 
 YASS_SH="$(basename "$(test -L "$0" && readlink "$0" || echo "$0")")"
 
@@ -105,6 +105,12 @@ fi
 [ -z $UPDATE_MODE ] && UPDATE_MODE="force"
 [ -z $MD5 ] && MD5="https://raw.githubusercontent.com/aogburn/yass/main/md5"
 [ -z $REMOTE_YASS_SH ] && REMOTE_YASS_SH="https://raw.githubusercontent.com/aogburn/yass/main/yass.sh"
+[ -z $YATDA_MD5 ] && MD5="https://raw.githubusercontent.com/aogburn/yatda/master/md5"
+[ -z $REMOTE_YATDA_SH ] && REMOTE_YATDA_SH="https://raw.githubusercontent.com/aogburn/yatda/master/yatda.sh"
+[ -z $YALA_MD5 ] && MD5="https://raw.githubusercontent.com/aogburn/yala/main/md5"
+[ -z $YALA_TAR_MD5 ] && TAR_MD5="https://raw.githubusercontent.com/aogburn/yala/main/tarmd5"
+[ -z $REMOTE_YALA_SH ] && REMOTE_YALA_SH="https://raw.githubusercontent.com/aogburn/yala/main/yala.sh"
+[ -z $REMOTE_YALA_ERRORS ] && REMOTE_YALA_ERRORS="https://raw.githubusercontent.com/aogburn/yala/main/yala-errors.tar.xz"
 # other
 [ -z $PARALLEL_LIMIT ] && PARALLEL_LIMIT="10"
 [ -z $GARBAGECAT_OPTS ] && GARBAGECAT_OPTS="-p -t 40"
@@ -205,19 +211,30 @@ export YELLOW='\033[1;33m'
 export NC='\033[0m'
 
 # Check for a new yass.sh if UPDATE_MODE is not 'never'
-if [ "$UPDATE_MODE" != "never" ]; then
-    echo "Checking script update. Use option '-u never' to skip the update check"
+if [ "$UPDATE_MODE" == "never" ]; then
+    CHECK_UPDATE="false"
+elif [ "$UPDATE_MODE" == "daily" ]; then
+    # check update if modified time is less than today
+    TODAY=`date -d 0 +%s`
+    YASS_LAST_MODIFIED=`stat -c '%Y' ~/code/yass-git/yass/yass.sh`
+    if [ $YASS_LAST_MODIFIED -lt $TODAY ]; then
+        CHECK_UPDATE="true"
+        touch $DIR/$YASS_SH
+    fi
+else
+    CHECK_UPDATE="true"
+fi
 
+if [ "$CHECK_UPDATE" == "true" ]; then
+    # Check yass updates
+    echo "Checking yass script update. Use option '-u never' to skip the update check"
     SUM=`md5sum $DIR/$YASS_SH | awk '{ print $1 }'`
     NEWSUM=$(curl -s $MD5)
-
     if [ "x$NEWSUM" != "x" ]; then
         if [ $SUM != $NEWSUM ]; then
-
             echo
             echo "$YASS_SH - $SUM - local"
             echo "$YASS_SH - $NEWSUM - remote"
-
             if [ "$UPDATE_MODE" = "ask" ]; then
                 while true; do
                     echo
@@ -231,14 +248,122 @@ if [ "$UPDATE_MODE" != "never" ]; then
             else
                 UPDATE="true"
             fi
-
             if [ "$UPDATE" = "true" ]; then
-                echo "Downloading new version. Please re-run $YASS_SH."
+                echo "Downloading new version of yass. Please re-run $YASS_SH."
                 wget -q $REMOTE_YASS_SH -O $DIR/$YASS_SH
                 exit
             fi
         fi
     fi
+
+    # Check yatda updates
+    if [ x"$YATDA_SH" == x ]; then
+        echo -e "${RED}<YATDA_SH> variable not specified.  Cannot update yatda.  Specify <YATDA_SH> in $HOME/.yass/config${NC}"
+    else
+        echo "Checking yatda script update. Use option '-u never' to skip the update check"
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+           SUM=`md5 -r $YATDA_SH | awk '{ print $1 }'`
+        else
+           SUM=`md5sum $YATDA_SH | awk '{ print $1 }'`
+        fi
+        NEWSUM=`curl -s $YATDA_MD5 | awk '{ print $1 }'`
+        if [ "x$NEWSUM" != "x" ]; then
+            if [ $SUM != $NEWSUM ]; then
+                echo
+                echo "$YATDA_SH - $SUM - local"
+                echo "$YATDA_SH - $NEWSUM - remote"
+                if [ "$UPDATE_MODE" = "ask" ]; then
+                    while true; do
+                        echo
+                        read -p "A new version of $YATDA_SH is available, do you want to update?" yn
+                        case $yn in
+                            [Yy]* ) UPDATE="true"; break;;
+                            [Nn]* ) UPDATE="false"; break;;
+                            * ) echo "Choose yes or no.";;
+                        esac
+                    done
+                else
+                    UPDATE="true"
+                fi
+                if [ "$UPDATE" = "true" ]; then
+                    echo "Downloading new yatda version."
+                    wget -q $REMOTE_YATDA_SH -O $YATDA_SH
+                fi
+            fi
+        fi
+    fi
+
+    # Check yass updates
+    if [ x"$YALA_SH" == x ]; then
+        echo -e "${RED}<YALA_SH> variable not specified.  Cannot update yass.  Specify <YALA_SH> in $HOME/.yass/config${NC}"
+    else
+        echo "Checking yala script update. Use option '-u never' to skip the update check"
+        SUM=`md5sum $YALA_SH | awk '{ print $1 }'`
+        NEWSUM=$(curl -s $YALA_MD5)
+        if [ "x$NEWSUM" != "x" ]; then
+            if [ $SUM != $NEWSUM ]; then
+                echo
+                echo "$YALA_SH - $SUM - local"
+                echo "$YALA_SH - $NEWSUM - remote"
+                if [ "$UPDATE_MODE" = "ask" ]; then
+                    while true; do
+                        echo
+                        read -p "A new version of $YALA_SH is available, do you want to update?" yn
+                        case $yn in
+                            [Yy]* ) UPDATE="true"; break;;
+                            [Nn]* ) UPDATE="false"; break;;
+                            * ) echo "Choose yes or no.";;
+                        esac
+                    done
+                else
+                    UPDATE="true"
+                fi
+                if [ "$UPDATE" = "true" ]; then
+                    echo "Downloading new yala version."
+                    wget -q $REMOTE_YALA_SH -O $YALA_SH
+                fi
+            fi
+        fi
+        echo
+        echo "Checking known errors tar update."
+        YALA_DIR=`dirname "$(readlink -f "$YALA_SH")"`
+        YALA_ERRORS="$YALA_DIR/yala-errors.tar.xz"
+        ERRORS_DIR="$DIR/yala-errors/"
+        SCRIPTS_DIR="$DIR/condition-scripts/"
+        SUM=$(md5sum $YALA_ERRORS | awk '{ print $1 }')
+        NEWSUM=$(curl -s $TAR_MD5)
+        if [ "x$NEWSUM" != "x" ]; then
+            if [ "x$SUM" == "x" ]; then
+                SUM=0
+            fi
+            if [ $SUM != $NEWSUM ]; then
+                echo
+                echo "$YALA_ERRORS - $SUM - local"
+                echo "$YALA_ERRORS - $NEWSUM - remote"
+                if [ "$UPDATE_MODE" = "ask" ]; then
+                    while true; do
+                        echo
+                        read -p "A version difference for $YALA_ERRORS was detected, do you want to update?" yn
+                        case $yn in
+                            [Yy]* ) UPDATE="true"; break;;
+                            [Nn]* ) UPDATE="false"; break;;
+                            * ) echo "Choose yes or no.";;
+                        esac
+                    done
+                else
+                    UPDATE="true"
+                fi
+                if [ "$UPDATE" = "true" ]; then
+                    echo "Downloading new yala version."
+                    wget -q $REMOTE_YALA_ERRORS -O $YALA_ERRORS
+                    rm -r $ERRORS_DIR
+                    tar -xf $YALA_ERRORS
+                    chmod -R 755 $SCRIPTS_DIR
+                fi
+            fi
+        fi
+    fi
+
     echo
     echo "Checks complete."
 fi
