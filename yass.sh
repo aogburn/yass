@@ -567,9 +567,11 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$SERVER" = "true" ]; then
                 grep -R "*** First and last timestamped lines of" -A 2 $file | tee -a $TARGET_DIR/server-log.yass-report
                 if [ -f $file-errors ]; then 
                     echo -n -e "${GREEN}"
-                    echo "$FILE_PREFIX$file-errors " | tee -a $TARGET_DIR/server-log.yass-report
+                    echo " ## highlights of $FILE_PREFIX$file-errors ##" | tee -a $TARGET_DIR/server-log.yass-report
                     echo -n -e "${NC}"
                     grep "known ERRORS found of " $file-errors | tee -a $TARGET_DIR/server-log.yass-report
+                    grep ". Occurrences of " $file-errors -A 1 | grep -v "\-\-" | tee -a $TARGET_DIR/server-log.yass-report
+                    grep " combinations are susceptible " $file-errors -A 1 | tee -a $TARGET_DIR/server-log.yass-report
                     grep "Counts of other errors " -A 5 $file-errors | tee -a $TARGET_DIR/server-log.yass-report
                 fi
         echo | tee -a $TARGET_DIR/server-log.yass-report
