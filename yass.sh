@@ -618,10 +618,10 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$THREAD" = "true" ]; then
             if [ "$NUMBER_THREADS" != "" ]; then
                 if [ $NUMBER_THREADS -gt $MAX_NUMBER_THREADS ]; then
                     MAX_NUMBER_THREADS=$NUMBER_THREADS
-                    MAX_NUMBER_THREADS_FILE=$file
+                    MAX_NUMBER_THREADS_FILE=$FILE_PREFIX$file
                 elif [ $NUMBER_THREADS -eq $MAX_NUMBER_THREADS ]; then
                     MAX_NUMBER_THREADS=$NUMBER_THREADS
-                    MAX_NUMBER_THREADS_FILE="$file
+                    MAX_NUMBER_THREADS_FILE="$FILE_PREFIX$file
 $MAX_NUMBER_THREADS_FILE"
                 fi
             fi
@@ -630,10 +630,10 @@ $MAX_NUMBER_THREADS_FILE"
             if [ "$NUMBER_REQUEST_THREADS" != "" ]; then
                 if [ $NUMBER_REQUEST_THREADS -gt $MAX_NUMBER_REQUEST_THREADS ]; then
                     MAX_NUMBER_REQUEST_THREADS=$NUMBER_REQUEST_THREADS
-                    MAX_NUMBER_REQUEST_THREADS_FILE=$file
+                    MAX_NUMBER_REQUEST_THREADS_FILE=$FILE_PREFIX$file
                 elif [ $NUMBER_REQUEST_THREADS -eq $MAX_NUMBER_REQUEST_THREADS ]; then
                     MAX_NUMBER_REQUEST_THREADS=$NUMBER_REQUEST_THREADS
-                    MAX_NUMBER_REQUEST_THREADS_FILE="$file
+                    MAX_NUMBER_REQUEST_THREADS_FILE="$FILE_PREFIX$file
 $MAX_NUMBER_REQUEST_THREADS_FILE"
                 fi
             fi
@@ -642,10 +642,10 @@ $MAX_NUMBER_REQUEST_THREADS_FILE"
             if [ "$NUMBER_REQUESTS" != "" ]; then
                 if [ $NUMBER_REQUESTS -gt $MAX_NUMBER_REQUESTS ]; then
                     MAX_NUMBER_REQUESTS=$NUMBER_REQUESTS
-                    MAX_NUMBER_REQUESTS_FILE=$file
+                    MAX_NUMBER_REQUESTS_FILE=$FILE_PREFIX$file
                 elif [ $NUMBER_REQUESTS -eq $MAX_NUMBER_REQUESTS ]; then
                     MAX_NUMBER_REQUESTS=$NUMBER_REQUESTS
-                    MAX_NUMBER_REQUESTS_FILE="$file
+                    MAX_NUMBER_REQUESTS_FILE="$FILE_PREFIX$file
 $MAX_NUMBER_REQUESTS_FILE"
                 fi
             fi
@@ -654,10 +654,10 @@ $MAX_NUMBER_REQUESTS_FILE"
             if [ "$AVG_NUMBER_THREADS" != "" ]; then
                 if [ $AVG_NUMBER_THREADS -gt $MAX_AVG_NUMBER_THREADS ]; then
                     MAX_AVG_NUMBER_THREADS=$AVG_NUMBER_THREADS
-                    MAX_AVG_NUMBER_THREADS_FILE=$file
+                    MAX_AVG_NUMBER_THREADS_FILE=$FILE_PREFIX$file
                 elif [ $AVG_NUMBER_THREADS -eq $MAX_AVG_NUMBER_THREADS ]; then
                     MAX_AVG_NUMBER_THREADS=$AVG_NUMBER_THREADS
-                    MAX_AVG_NUMBER_THREADS_FILE="$file
+                    MAX_AVG_NUMBER_THREADS_FILE="$FILE_PREFIX$file
 $MAX_AVG_NUMBER_THREADS_FILE"
                 fi
             fi
@@ -666,10 +666,10 @@ $MAX_AVG_NUMBER_THREADS_FILE"
             if [ "$AVG_NUMBER_REQUEST_THREADS" != "" ]; then
                 if [ $AVG_NUMBER_REQUEST_THREADS -gt $MAX_AVG_NUMBER_REQUEST_THREADS ]; then
                     MAX_AVG_NUMBER_REQUEST_THREADS=$AVG_NUMBER_REQUEST_THREADS
-                    MAX_AVG_NUMBER_REQUEST_THREADS_FILE=$file
+                    MAX_AVG_NUMBER_REQUEST_THREADS_FILE=$FILE_PREFIX$file
                 elif [ $AVG_NUMBER_REQUEST_THREADS -eq $MAX_AVG_NUMBER_REQUEST_THREADS ]; then
                     MAX_AVG_NUMBER_REQUEST_THREADS=$AVG_NUMBER_REQUEST_THREADS
-                    MAX_AVG_NUMBER_REQUEST_THREADS_FILE="$file
+                    MAX_AVG_NUMBER_REQUEST_THREADS_FILE="$FILE_PREFIX$file
 $MAX_AVG_NUMBER_REQUEST_THREADS_FILE"
                 fi
             fi
@@ -678,10 +678,10 @@ $MAX_AVG_NUMBER_REQUEST_THREADS_FILE"
             if [ "$AVG_NUMBER_REQUESTS" != "" ]; then
                 if [ $AVG_NUMBER_REQUESTS -gt $MAX_AVG_NUMBER_REQUESTS ]; then
                     MAX_AVG_NUMBER_REQUESTS=$AVG_NUMBER_REQUESTS
-                    MAX_AVG_NUMBER_REQUESTS_FILE=$file
+                    MAX_AVG_NUMBER_REQUESTS_FILE=$FILE_PREFIX$file
                 elif [ $AVG_NUMBER_REQUESTS -eq $MAX_AVG_NUMBER_REQUESTS ]; then
                     MAX_AVG_NUMBER_REQUESTS=$AVG_NUMBER_REQUESTS
-                    MAX_AVG_NUMBER_REQUESTS_FILE="$file
+                    MAX_AVG_NUMBER_REQUESTS_FILE="$FILE_PREFIX$file
 $MAX_AVG_NUMBER_REQUESTS_FILE"
                 fi
             fi
@@ -697,22 +697,22 @@ $MAX_AVG_NUMBER_REQUESTS_FILE"
             echo "Number of thread dump files: $NUMBER_THREAD_DUMPS" >> $TARGET_DIR/thread-dump.yass-report
 
             echo "* Max number of threads is $MAX_NUMBER_THREADS in files:"
-            echo "$FILE_PREFIX$MAX_NUMBER_THREADS_FILE"
+            echo "$MAX_NUMBER_THREADS_FILE"
             echo
             echo "* Max number of request threads is $MAX_NUMBER_REQUEST_THREADS in files:"
-            echo "$FILE_PREFIX$MAX_NUMBER_REQUEST_THREADS_FILE"
+            echo "$MAX_NUMBER_REQUEST_THREADS_FILE"
             echo
             echo "* Max number of processing requests is $MAX_NUMBER_REQUESTS in files:"
-            echo "$FILE_PREFIX$MAX_NUMBER_REQUESTS_FILE"
+            echo "$MAX_NUMBER_REQUESTS_FILE"
             echo
             echo "* Max average number of threads is $MAX_AVG_NUMBER_THREADS in files:"
-            echo "$FILE_PREFIX$MAX_AVG_NUMBER_THREADS_FILE"
+            echo "$MAX_AVG_NUMBER_THREADS_FILE"
             echo
             echo "* Max average number of request threads is $MAX_AVG_NUMBER_REQUEST_THREADS in files:"
-            echo "$FILE_PREFIX$MAX_AVG_NUMBER_REQUEST_THREADS_FILE"
+            echo "$MAX_AVG_NUMBER_REQUEST_THREADS_FILE"
             echo
             echo "* Max average number of processing requests is $MAX_AVG_NUMBER_REQUESTS in files:"
-            echo "$FILE_PREFIX$MAX_AVG_NUMBER_REQUESTS_FILE"
+            echo "$MAX_AVG_NUMBER_REQUESTS_FILE"
             echo
         }  | tee -a $TARGET_DIR/thread-dump.yass-report
         echo "====== Completed thread dump summary ======" >> $TARGET_DIR/thread-dump.yass-report
