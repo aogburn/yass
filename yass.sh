@@ -558,7 +558,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$SERVER" = "true" ]; then
     echo "Number of server log files: $NUMBER_SERVER_LOGS"
     if [ $NUMBER_SERVER_LOGS -gt 0 ]; then
         echo "====== Server log yala summaries ======" > $TARGET_DIR/server-log.yass-report
-        echo "Number of server log files: $NUMBER_SERVER_LOGS" >> tee -a $TARGET_DIR/server-log.yass-report
+        echo "Number of server log files: $NUMBER_SERVER_LOGS" >> $TARGET_DIR/server-log.yass-report
         echo | tee -a $TARGET_DIR/server-log.yass-report
 
         for file in `find $TARGET_DIR -type f -iname \*.yala`; do
