@@ -216,7 +216,7 @@ if [ "$UPDATE_MODE" == "never" ]; then
 elif [ "$UPDATE_MODE" == "daily" ]; then
     # check update if modified time is less than today
     TODAY=`date -d 0 +%s`
-    YASS_LAST_MODIFIED=`stat -c '%Y' ~/code/yass-git/yass/yass.sh`
+    YASS_LAST_MODIFIED=`stat -c '%Y' $DIR/$YASS_SH`
     if [ $YASS_LAST_MODIFIED -lt $TODAY ]; then
         CHECK_UPDATE="true"
         touch $DIR/$YASS_SH
