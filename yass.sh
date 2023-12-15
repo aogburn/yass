@@ -102,7 +102,7 @@ fi
 
 # set required variables with default values, if not set in $HOME/.yass/config
 # update options
-[ -z $UPDATE_MODE ] && UPDATE_MODE="force"
+[ -z $UPDATE_MODE ] && UPDATE_MODE="daily"
 [ -z $MD5 ] && MD5="https://raw.githubusercontent.com/aogburn/yass/main/md5"
 [ -z $REMOTE_YASS_SH ] && REMOTE_YASS_SH="https://raw.githubusercontent.com/aogburn/yass/main/yass.sh"
 [ -z $YATDA_MD5 ] && MD5="https://raw.githubusercontent.com/aogburn/yatda/master/md5"
@@ -328,8 +328,8 @@ if [ "$CHECK_UPDATE" == "true" ]; then
         echo "Checking known errors tar update."
         YALA_DIR=`dirname "$(readlink -f "$YALA_SH")"`
         YALA_ERRORS="$YALA_DIR/yala-errors.tar.xz"
-        ERRORS_DIR="$DIR/yala-errors/"
-        SCRIPTS_DIR="$DIR/condition-scripts/"
+        ERRORS_DIR="$YALA_DIR/yala-errors/"
+        SCRIPTS_DIR="$YALA_DIR/condition-scripts/"
         SUM=$(md5sum $YALA_ERRORS | awk '{ print $1 }')
         NEWSUM=$(curl -s $TAR_MD5)
         if [ "x$NEWSUM" != "x" ]; then
