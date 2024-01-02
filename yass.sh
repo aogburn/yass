@@ -105,10 +105,10 @@ fi
 [ -z $UPDATE_MODE ] && UPDATE_MODE="daily"
 [ -z $MD5 ] && MD5="https://raw.githubusercontent.com/aogburn/yass/main/md5"
 [ -z $REMOTE_YASS_SH ] && REMOTE_YASS_SH="https://raw.githubusercontent.com/aogburn/yass/main/yass.sh"
-[ -z $YATDA_MD5 ] && MD5="https://raw.githubusercontent.com/aogburn/yatda/master/md5"
+[ -z $YATDA_MD5 ] && YATDA_MD5="https://raw.githubusercontent.com/aogburn/yatda/master/md5"
 [ -z $REMOTE_YATDA_SH ] && REMOTE_YATDA_SH="https://raw.githubusercontent.com/aogburn/yatda/master/yatda.sh"
-[ -z $YALA_MD5 ] && MD5="https://raw.githubusercontent.com/aogburn/yala/main/md5"
-[ -z $YALA_TAR_MD5 ] && TAR_MD5="https://raw.githubusercontent.com/aogburn/yala/main/tarmd5"
+[ -z $YALA_MD5 ] && YALA_MD5="https://raw.githubusercontent.com/aogburn/yala/main/md5"
+[ -z $YALA_TAR_MD5 ] && YALA_TAR_MD5="https://raw.githubusercontent.com/aogburn/yala/main/tarmd5"
 [ -z $REMOTE_YALA_SH ] && REMOTE_YALA_SH="https://raw.githubusercontent.com/aogburn/yala/main/yala.sh"
 [ -z $REMOTE_YALA_ERRORS ] && REMOTE_YALA_ERRORS="https://raw.githubusercontent.com/aogburn/yala/main/yala-errors.tar.xz"
 # other
@@ -331,7 +331,7 @@ if [ "$CHECK_UPDATE" == "true" ]; then
         ERRORS_DIR="$YALA_DIR/yala-errors/"
         SCRIPTS_DIR="$YALA_DIR/condition-scripts/"
         SUM=$(md5sum $YALA_ERRORS | awk '{ print $1 }')
-        NEWSUM=$(curl -s $TAR_MD5)
+        NEWSUM=$(curl -s $YALA_TAR_MD5)
         if [ "x$NEWSUM" != "x" ]; then
             if [ "x$SUM" == "x" ]; then
                 SUM=0
