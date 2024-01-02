@@ -354,10 +354,11 @@ if [ "$CHECK_UPDATE" == "true" ]; then
                     UPDATE="true"
                 fi
                 if [ "$UPDATE" = "true" ]; then
-                    echo "Downloading new yala version."
+                    echo "Downloading new yala error pack version."
                     wget -q $REMOTE_YALA_ERRORS -O $YALA_ERRORS
                     rm -r $ERRORS_DIR
-                    tar -xf $YALA_ERRORS
+                    rm -r $SCRIPTS_DIR
+                    tar -xf $YALA_ERRORS -C $YALA_DIR
                     chmod -R 755 $SCRIPTS_DIR
                 fi
             fi
