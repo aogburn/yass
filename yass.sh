@@ -462,7 +462,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$SERVER" = "true" ]; then
     if [ x"$YALA_SH" == x ]; then
         echo -e "${RED}<YALA_SH> variable not specified.  Cannot summarize server logs.  Specify <YALA_SH> in $HOME/.yass/config${NC}"
     else
-        echo -e "${GREEN}## Finding and summarizing server logs in $TARGET_DIR with $YALA_SH ##${NC}"
+        echo -e "${GREEN}## Finding and summarizing server logs in $FILE_PREFIX$TARGET_DIR with $YALA_SH ##${NC}"
         NUMBER_SERVER_LOGS=0
         server_pids=()
         for file in `find $TARGET_DIR -type f -iname \*server\*log\* | grep -v "/\.archive"`; do
@@ -485,7 +485,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$THREAD" = "true" ]; then
     if [ x"$YATDA_SH" == x ]; then
         echo -e "${RED}<YATDA_SH> variable not specified.  Cannot summarize thread dumps.  Specify <YATDA_SH> in $HOME/.yass/config${NC}"
     else
-        echo -e "${GREEN}## Finding and summarizing thread dump files in $TARGET_DIR with $YATDA_SH ##${NC}"
+        echo -e "${GREEN}## Finding and summarizing thread dump files in $FILE_PREFIX$TARGET_DIR with $YATDA_SH ##${NC}"
         NUMBER_THREAD_DUMPS=0
         # exclude a .archive subdirectory casegrab could create
         for file in `grep -lR "Full thread dump " $TARGET_DIR | grep -v "/\.archive"`; do
@@ -506,7 +506,7 @@ fi
 
 # Summarize hs_err_pid crash files
 if [ "$OPTIONS_SET" = "false" ] || [ "$KRASH" = "true" ]; then
-    echo -e "${GREEN}## Finding and summarizing hs_err_pid files in $TARGET_DIR with krashpad ##${NC}"
+    echo -e "${GREEN}## Finding and summarizing hs_err_pid files in $FILE_PREFIX$TARGET_DIR with krashpad ##${NC}"
     # exclude a .archive subdirectory casegrab could create
     NUMBER_HS_ERR_PIDS=0
     for file in `find $TARGET_DIR -type f -iname \*hs_err_pid\* | grep -v "/\.archive" | grep -v "hs_err_pid.*\.pad" | grep -v ".*\.yass"`; do
@@ -528,7 +528,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$GC" = "true" ]; then
     if [ x"$GARBAGECAT" == x ]; then
         echo -e "${RED}<GARBAGECAT> variable not specified.  Cannot summarize GC logs.  Specify <GARBAGECAT> jar location in $HOME/.yass/config${NC}"
     else
-        echo -e "${GREEN}## Finding and summarizing GC files in $TARGET_DIR with $GARBAGECAT ##${NC}"
+        echo -e "${GREEN}## Finding and summarizing GC files in $FILE_PREFIX$TARGET_DIR with $GARBAGECAT ##${NC}"
         i=0
         gc_pids=()
         NUMBER_GC_LOGS=0
@@ -724,7 +724,7 @@ fi
 
 # Summarize access logs
 if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
-    echo -e "${GREEN}## Finding and summarizing access files in $TARGET_DIR  ##${NC}"
+    echo -e "${GREEN}## Finding and summarizing access files in $FILE_PREFIX$TARGET_DIR  ##${NC}"
     echo
     #peaks across all access logs
     ANY_RESPONSE_TIMES=0
