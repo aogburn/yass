@@ -889,7 +889,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                     printf "\033[0K\r"
                     echo >> $file-summary.yass-access
                     echo -e "${YELLOW}## Access log summary of $FILE_PREFIX$file in $FILE_PREFIX$file-summary.yass-access ##${NC}"
-                    echo "## Access log summary of $file ##" >> $TARGET_DIR/access-log.yass-report
+                    echo "## Access log summary of $file ##" > $TARGET_DIR/access-log.yass-report
                     {
                         echo "* Number of requests: $TOTAL_COMPLETED"
                         if [ $TOTAL_COMPLETED -gt 0 ]; then
@@ -1042,7 +1042,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$HEAP_DUMP" = "true" ]; then
     NUMBER_HEAP_DUMPS=`grep -lR "JAVA PROFILE" $TARGET_DIR | grep -v "/\.archive" | wc -l`
     if [ $NUMBER_HEAP_DUMPS -gt 0 ]; then
         echo -e "${YELLOW}====== Final heap dump summary ======${NC}"
-        echo "====== Final heap dump summary ======" >> $TARGET_DIR/heap-dump.yass-report
+        echo "====== Final heap dump summary ======" > $TARGET_DIR/heap-dump.yass-report
         {
             LARGEST_HEAP_DUMP_SIZE=0
             echo "Number of heap dump files: $NUMBER_HEAP_DUMPS"
