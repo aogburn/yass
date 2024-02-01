@@ -725,6 +725,7 @@ fi
 # Summarize access logs
 if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
     echo -e "${GREEN}## Finding and summarizing access files in $FILE_PREFIX$TARGET_DIR  ##${NC}"
+    echo -e "## Finding and summarizing access files in $FILE_PREFIX$TARGET_DIR  ##" > access-log.yass-report
     echo
     #peaks across all access logs
     ANY_RESPONSE_TIMES=0
@@ -889,7 +890,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                     printf "\033[0K\r"
                     echo >> $file-summary.yass-access
                     echo -e "${YELLOW}## Access log summary of $FILE_PREFIX$file in $FILE_PREFIX$file-summary.yass-access ##${NC}"
-                    echo "## Access log summary of $file ##" > $TARGET_DIR/access-log.yass-report
+                    echo "## Access log summary of $file ##" >> $TARGET_DIR/access-log.yass-report
                     {
                         echo "* Number of requests: $TOTAL_COMPLETED"
                         if [ $TOTAL_COMPLETED -gt 0 ]; then
