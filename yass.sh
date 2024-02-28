@@ -385,8 +385,7 @@ if [ "x$CASE_ID" != "x" ]; then
         fi
         result=$?
         if [ $result -gt 0 ]; then
-            echo "Failed to download via casegrab"
-            exit $result
+            echo "Error returned by casegrab. Continuing to check and process any downloads anyway."
         fi
         DOWNLOAD_COUNT=`ls $CASE_DIR/$CASE_ID/.latest/ | wc -l`
         if [ $DOWNLOAD_COUNT -gt 0 ]; then
