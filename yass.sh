@@ -422,7 +422,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$EXTRACT" = "true" ]; then
                 if [[ ${file} != *"sosreport"* ]]; then
                     echo "    Extracting $file"
                     mkdir $file-extract
-                    aunpack -X $file-extract $file; rm -rf $file &
+                    aunpack -X $file-extract $file; [ $? -eq 0 ] && rm -rf $file || mv $file $file.yass-extract-failed
                     pids+=($!)
                     # We extracted, so check again in case there were nested compressed archives
                     CHECK_FILES=true
@@ -434,6 +434,8 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$EXTRACT" = "true" ]; then
                 wait $pid
             done
 
+
+
             # remove any space in file names to simplify processing and avoid errors
             while read line
             do
@@ -442,6 +444,10 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$EXTRACT" = "true" ]; then
             done < <(find $TARGET_DIR -iname "* *")
         done
         echo -e "${GREEN}File extraction complete${NC}"
+
+        for file in `find $TARGET_DIR -type f -iname \*.yass-extract-failed`; do
+            echo -e "${RED}    Failed to extract $file${NC}"
+        done
     fi
     echo
 fi
