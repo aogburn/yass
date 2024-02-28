@@ -558,6 +558,10 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$SERVER" = "true" ]; then
     echo -e "${YELLOW}====== Server log yala summaries ======${NC}"
     echo "Number of server log files: $NUMBER_SERVER_LOGS"
     if [ $NUMBER_SERVER_LOGS -gt 0 ]; then
+        echo > $TARGET_DIR/.server-log.yass-report.tmp
+        KNOWN_ERROR_COUNT=0
+        NUMBER_SERVER_KNOWN_ERROR_LOGS=0
+
         echo "====== Server log yala summaries ======" > $TARGET_DIR/server-log.yass-report
         echo "Number of server log files: $NUMBER_SERVER_LOGS" >> $TARGET_DIR/server-log.yass-report
         echo | tee -a $TARGET_DIR/server-log.yass-report
@@ -574,9 +578,27 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$SERVER" = "true" ]; then
                     grep ". Occurrences of " $file-errors -A 1 | grep -v "\-\-" | tee -a $TARGET_DIR/server-log.yass-report
                     grep " combinations are susceptible " $file-errors -A 1 | tee -a $TARGET_DIR/server-log.yass-report
                     grep "Counts of other errors " -A 5 $file-errors | tee -a $TARGET_DIR/server-log.yass-report
+
+                    KNOWN_ERROR_COUNT=`grep ". Occurrences of " $file-errors | wc -l`
+                    if [ $KNOWN_ERROR_COUNT -gt 0 ]; then
+                        ORIG_SERVER_FILE=`echo $file | sed -E 's/(.*)\.yala/\1/g'`
+                        echo " * $KNOWN_ERROR_COUNT known errors in $FILE_PREFIX$file-errors - full $FILE_PREFIX$ORIG_SERVER_FILE" >> $TARGET_DIR/.server-log.yass-report.tmp
+                        NUMBER_SERVER_KNOWN_ERROR_LOGS=$((NUMBER_SERVER_KNOWN_ERROR_LOGS+1))
+                    fi
                 fi
         echo | tee -a $TARGET_DIR/server-log.yass-report
         done
+
+        echo -e "${YELLOW}====== Final server log summary ======${NC}"
+        echo "====== Final server log summary ======" >> $TARGET_DIR/server-log.yass-report
+        {
+            echo " Number of server logs with known errors: $NUMBER_SERVER_KNOWN_ERROR_LOGS"
+            cat $TARGET_DIR/.server-log.yass-report.tmp | sort -nr
+            rm -rf $TARGET_DIR/.server-log.yass-report.tmp
+        } | tee -a $TARGET_DIR/server-log.yass-report
+        echo "====== Completed server log summary ======" >> $TARGET_DIR/server-log.yass-report
+        echo -e "${YELLOW}====== Completed server log summary ======${NC}"
+        echo | tee -a $TARGET_DIR/server-log.yass-report
     fi
 fi 
 
