@@ -803,10 +803,18 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                 echo -e "${RED} $file does not contain a standard format with the date/time in the expected position.  Skipping for analysis. ${NC}"
             else
                 # preliminary sanity check on the access log's number of unique datestamps to the minute
-                DATE_COUNT=`sed -E 's/.*(\[.*:[0-2][0-9]:[0-5][0-9]):.*\].*/\1/g' $file | uniq | sort -n | uniq | wc -l`
+                STAMP=`head -n 1 $file | sed -E 's/.*\[(.*)\/(.*)\/(.*):([0-2][0-9]:[0-5][0-9]):.*\].*/\1 \2 \3 \4/g'`
+                FIRST_DATE=`date -d "$STAMP" +%s`
+                STAMP=`tail -n 1 $file | sed -E 's/.*\[(.*)\/(.*)\/(.*):([0-2][0-9]:[0-5][0-9]):.*\].*/\1 \2 \3 \4/g'`
+                LAST_DATE=`date -d "$STAMP" +%s`
+                DATE_COUNT=`echo $(( ($LAST_DATE - $FIRST_DATE) / 60 ))`
 
                 if [ $DATE_COUNT -gt $ACCESS_LOG_LIMIT ]; then
                     echo -e "${RED} $file covers $DATE_COUNT unique minute date stamps, exceeding the limit of $ACCESS_LOG_LIMIT. Skipping to avoid excessive processing.  Trim the file to more specific desired dates to analyze. ${NC}"
+                    echo "First date: $FIRST_DATE"
+                    head -n 1 $file
+                    echo "Last date: $LAST_DATE"
+                    tail -n 1 $file
                 else
                     # check if valid response times are included in expected position
                     RESPONSE_TIMES=`grep -m 1 "[0-9]\.[0-9][0-9][0-9]$" $file | wc -l`
