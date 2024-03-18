@@ -1105,3 +1105,5 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$HEAP_DUMP" = "true" ]; then
         echo "====== Completed heap dump summary ======" >> $TARGET_DIR/heap-dump.yass-report
     fi
 fi
+
+echo -e "${GREEN}## Yass completed summary of $FILE_PREFIX$TARGET_DIR ##${NC}"
