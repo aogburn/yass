@@ -519,7 +519,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$KRASH" = "true" ]; then
         NUMBER_HS_ERR_PIDS=$((NUMBER_HS_ERR_PIDS+1))
         if [ x"$KRASHPAD_CMD" == x ]; then
             KRASHPAD_FILE_DIR=`dirname "$(readlink -f "$file")"`
-            docker run --pull=always -v $KRASHPAD_FILE_DIR:$KRASHPAD_FILE_DIR:z ghcr.io/mgm3746/krashpad:main -c $file &> $file.pad
+            podman run --pull=always -v $KRASHPAD_FILE_DIR:$KRASHPAD_FILE_DIR:z ghcr.io/mgm3746/krashpad:main -c $file &> $file.pad
         else
             $KRASHPAD_CMD -c $file > $file.pad &
         fi
