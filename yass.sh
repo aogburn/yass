@@ -803,9 +803,9 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                 echo -e "${RED} $file does not contain a standard format with the date/time in the expected position.  Skipping for analysis. ${NC}"
             else
                 # preliminary sanity check on the access log's number of unique datestamps to the minute
-                STAMP=`head -n 1 $file | sed -E 's/.*\[(.*)\/(.*)\/(.*):([0-2][0-9]:[0-5][0-9]):.*\].*/\1 \2 \3 \4/g'`
+                STAMP=`head -n 1 $file | sed -E 's/.*\[(.*)\/(.*)\/([0-9]+):([0-2][0-9]:[0-5][0-9]):.*\].*/\1 \2 \3 \4/g'`
                 FIRST_DATE=`date -d "$STAMP" +%s`
-                STAMP=`tail -n 1 $file | sed -E 's/.*\[(.*)\/(.*)\/(.*):([0-2][0-9]:[0-5][0-9]):.*\].*/\1 \2 \3 \4/g'`
+                STAMP=`tail -n 1 $file | sed -E 's/.*\[(.*)\/(.*)\/([0-9]+):([0-2][0-9]:[0-5][0-9]):.*\].*/\1 \2 \3 \4/g'`
                 LAST_DATE=`date -d "$STAMP" +%s`
                 DATE_COUNT=`echo $(( ($LAST_DATE - $FIRST_DATE) / 60 ))`
 
