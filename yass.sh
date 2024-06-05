@@ -901,10 +901,10 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                         fi
                         if [ $RESPONSE_TIMES -ne "0" ]; then
                             if [ $COMPLETED -gt "0" ]; then
-                                LONG=`grep -v " [0-9]\.[0-9][0-9][0-9]$" $current | wc -l`
+                                LONG=`grep -c -E " [1-9][0-9]+\.[0-9][0-9][0-9]$" $current | wc -l`
                                 PERCENT_LONG=`printf %.2f $((10**4 * $LONG / $COMPLETED ))e-2`
                                 TOTAL_LONG=$((TOTAL_LONG + LONG))
-                                MAX_RESPONSE_TIME=`sed -E 's/.* ([0-9]+\.[0-9][0-9][0-9])$/\1/g' $current | sort -nr | head -n 1`
+                                MAX_RESPONSE_TIME=`sed -n -E 's/.* ([0-9]+\.[0-9][0-9][0-9])$/\1/p' $current | sort -nr | head -n 1`
                                 echo $MAX_RESPONSE_TIME seconds at $DATE >> $file.yass-max
                                 cat $file.yass-max | sort -nr | head -n1 > $file.yass-max2
                                 mv $file.yass-max2 $file.yass-max
