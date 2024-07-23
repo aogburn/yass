@@ -385,7 +385,10 @@ if [ "x$CASE_ID" != "x" ]; then
         fi
         result=$?
         if [ $result -gt 0 ]; then
-            echo "Error returned by casegrab. Continuing to check and process any downloads anyway."
+            echo "Error returned by casegrab. Continuing to check and process any downloads anyway. If a 400 response error was returned, try clearing your oidc token with the following command:"
+            echo
+            echo "    $ rm -rf ~/.tokens/oidc-tokens.json"
+            echo
         fi
         DOWNLOAD_COUNT=`ls $CASE_DIR/$CASE_ID/.latest/ | wc -l`
         if [ $DOWNLOAD_COUNT -gt 0 ]; then
@@ -798,6 +801,8 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
 
             # preliminary sanity check on the access log's format
             # confirm the date/time is found as expected
+
+            # TO DO - needs improvement for ipv6
             GOOD_FORMAT=`head -n1 $file | awk -F '[[/:]' '{print $2 ":" $3 ":" $4 ":" $5 ":" $6}' | grep -E "^.*20[0-9][0-9]:[0-2][0-9]:[0-5][0-9]$" | wc -l`
             if [ $GOOD_FORMAT -eq 0 ]; then
                 echo -e "${RED} $file does not contain a standard format with the date/time in the expected position.  Skipping for analysis. ${NC}"
