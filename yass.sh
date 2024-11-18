@@ -906,7 +906,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                         fi
                         if [ $RESPONSE_TIMES -ne "0" ]; then
                             if [ $COMPLETED -gt "0" ]; then
-                                LONG=`grep -c -E " [1-9][0-9]+\.[0-9][0-9][0-9]$" $current | wc -l`
+                                LONG=`grep -c -E " [1-9][0-9]+\.[0-9][0-9][0-9]$" $current`
                                 PERCENT_LONG=`printf %.2f $((10**4 * $LONG / $COMPLETED ))e-2`
                                 TOTAL_LONG=$((TOTAL_LONG + LONG))
                                 MAX_RESPONSE_TIME=`sed -n -E 's/.* ([0-9]+\.[0-9][0-9][0-9])$/\1/p' $current | sort -nr | head -n 1`
