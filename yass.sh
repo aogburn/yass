@@ -803,26 +803,29 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
             # confirm the date/time is found as expected
 
             # TO DO - needs improvement for ipv6
-            GOOD_FORMAT=`head -n1 $file | awk -F '[[/:]' '{print $2 ":" $3 ":" $4 ":" $5 ":" $6}' | grep -E "^.*20[0-9][0-9]:[0-2][0-9]:[0-5][0-9]$" | wc -l`
+            # strip ip - use from date on
+            sed -E 's/.*(\[[0-9]+\/[A-Za-z][a-z][a-z]\/.*)/\1/g' $file > $file.noip
+
+            GOOD_FORMAT=`head -n1 $file.noip | awk -F '[[/:]' '{print $2 ":" $3 ":" $4 ":" $5 ":" $6}' | grep -E "^.*20[0-9][0-9]:[0-2][0-9]:[0-5][0-9]$" | wc -l`
             if [ $GOOD_FORMAT -eq 0 ]; then
                 echo -e "${RED} $file does not contain a standard format with the date/time in the expected position.  Skipping for analysis. ${NC}"
             else
                 # preliminary sanity check on the access log's number of unique datestamps to the minute
-                STAMP=`head -n 1 $file | sed -E 's/.*\[(.*)\/(.*)\/([0-9]+):([0-2][0-9]:[0-5][0-9]):.*\].*/\1 \2 \3 \4/g'`
+                STAMP=`head -n 1 $file.noip | sed -E 's/.*\[(.*)\/(.*)\/([0-9]+):([0-2][0-9]:[0-5][0-9]):.*\].*/\1 \2 \3 \4/g'`
                 FIRST_DATE=`date -d "$STAMP" +%s`
-                STAMP=`tail -n 1 $file | sed -E 's/.*\[(.*)\/(.*)\/([0-9]+):([0-2][0-9]:[0-5][0-9]):.*\].*/\1 \2 \3 \4/g'`
+                STAMP=`tail -n 1 $file.noip | sed -E 's/.*\[(.*)\/(.*)\/([0-9]+):([0-2][0-9]:[0-5][0-9]):.*\].*/\1 \2 \3 \4/g'`
                 LAST_DATE=`date -d "$STAMP" +%s`
                 DATE_COUNT=`echo $(( ($LAST_DATE - $FIRST_DATE) / 60 ))`
 
                 if [ $DATE_COUNT -gt $ACCESS_LOG_LIMIT ]; then
                     echo -e "${RED} $file covers $DATE_COUNT unique minute date stamps, exceeding the limit of $ACCESS_LOG_LIMIT. Skipping to avoid excessive processing.  Trim the file to more specific desired dates to analyze. ${NC}"
                     echo "First date: $FIRST_DATE"
-                    head -n 1 $file
+                    head -n 1 $file.noip
                     echo "Last date: $LAST_DATE"
-                    tail -n 1 $file
+                    tail -n 1 $file.noip
                 else
                     # check if valid response times are included in expected position
-                    RESPONSE_TIMES=`grep -m 1 "[0-9]\.[0-9][0-9][0-9]$" $file | wc -l`
+                    RESPONSE_TIMES=`grep -m 1 "[0-9]\.[0-9][0-9][0-9]$" $file.noip | wc -l`
                     if [ $RESPONSE_TIMES -eq "0" ]; then
                         echo "        Response times not found in $file.  Use %T as last field of access-log pattern for response time summaries."
                     fi
@@ -837,7 +840,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                     fi
 
                     #temporarily split each minute to a separate file
-                    awk -v f="$tmp" -F '[\\[/:]' '{print > f "." $2 ":" $3 ":" $4 ":" $5 ":" $6}' $file
+                    awk -v f="$tmp" -F '[\\[/:]' '{print > f "." $2 ":" $3 ":" $4 ":" $5 ":" $6}' $file.noip
                     #for x in $DATES; do
                     DATE_COUNT=`ls -1 $tmp* | wc -l`
                     for current in `ls -1 $tmp*`; do
@@ -962,6 +965,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$ACCESS" = "true" ]; then
                         echo
                     } | tee -a $TARGET_DIR/access-log.yass-report
                     rm -rf $tmp*
+                    rm -rf $file.noip
                     rm -rf $file.yass-max
                     NUMBER_ACCESS_LOGS=$((NUMBER_ACCESS_LOGS+1))
                 fi
