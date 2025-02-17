@@ -1147,6 +1147,11 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$HEAP_DUMP" = "true" ]; then
             echo "Number of heap dump files: $NUMBER_HEAP_DUMPS"
             #for file in `find $TARGET_DIR -type f -iname \*.hprof -o -iname \*.bin`; do
             for file in `grep -lR "JAVA PROFILE" $TARGET_DIR | grep -v "/\.archive"`; do
+                if [[ $file != *.hprof ]]; then
+                   echo "adding proper .hprof extension to $file"
+                   mv $file $file.hprof
+                   file=$file.hprof
+                fi
                 file_size=`stat -c%s $file`
                 echo "    $file - $file_size bytes"
                 if [ $file_size -gt $LARGEST_HEAP_DUMP_SIZE ]; then
