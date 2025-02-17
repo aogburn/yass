@@ -574,10 +574,44 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$SERVER" = "true" ]; then
         echo "Number of server log files: $NUMBER_SERVER_LOGS" >> $TARGET_DIR/server-log.yass-report
         echo | tee -a $TARGET_DIR/server-log.yass-report
 
+        MAX_STUCK=0
+        MAX_PEAK_STUCK=0
+        STUCK_FILE_COUNT=0
+        MAX_AVG_STUCK_TIME=0
+        MAX_LONG_STUCK_TIME=0
         for file in `find $TARGET_DIR -type f -iname \*.yala`; do
                 echo -e "${YELLOW}## Yala highlights of $FILE_PREFIX$file ##${NC}"
                 echo "## Yala highlights of $file ##" >> $TARGET_DIR/server-log.yass-report
                 grep -R "*** First and last timestamped lines of" -A 2 $file | tee -a $TARGET_DIR/server-log.yass-report
+                sed -n '/Stuck thread summary/,$p' $file | tee -a $TARGET_DIR/server-log.yass-report
+
+                STUCK=`grep "Stuck request occurrences" $file | sed -E 's/.*: (.*)/\1/g'`
+                if [ $STUCK -gt 0 ]; then
+                   STUCK_FILE_COUNT=$((STUCK_FILE_COUNT+1))
+                    if [ $STUCK -gt $MAX_STUCK ]; then
+                        MAX_STUCK=$STUCK
+                        MAX_STUCK_FILE=$FILE_PREFIX$file
+                    fi
+
+                    PEAK_STUCK=`grep "Peak stuck request count" $file | sed -E 's/.*: (.*) stuck requests/\1/g'`
+                    if [ $PEAK_STUCK -gt $MAX_PEAK_STUCK ]; then
+                        MAX_PEAK_STUCK=$PEAK_STUCK
+                        MAX_PEAK_STUCK_FILE=$FILE_PREFIX$file
+                    fi
+
+                    AVG_STUCK_TIME=`grep "Average request stuck time" $file | sed -E 's/.*: (.*) ms/\1/g'`
+                    if (( $(echo "$AVG_STUCK_TIME > $MAX_AVG_STUCK_TIME" | bc -l) )); then
+                        MAX_AVG_STUCK_TIME=$AVG_STUCK_TIME
+                        MAX_AVG_STUCK_TIME_FILE=$FILE_PREFIX$file
+                    fi
+
+                   LONG_STUCK_TIME=`grep "Longest request stuck time" $file | sed -E 's/.*: (.*) ms/\1/g'`
+                    if [ $LONG_STUCK_TIME -gt $MAX_LONG_STUCK_TIME ]; then
+                        MAX_LONG_STUCK_TIME=$LONG_STUCK_TIME
+                        MAX_LONG_STUCK_TIME_FILE=$FILE_PREFIX$file
+                    fi
+                fi
+
                 if [ -f $file-errors ]; then 
                     echo -n -e "${GREEN}"
                     echo " ## highlights of $FILE_PREFIX$file-errors ##" | tee -a $TARGET_DIR/server-log.yass-report
@@ -603,6 +637,14 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$SERVER" = "true" ]; then
             echo " Number of server logs with known errors: $NUMBER_SERVER_KNOWN_ERROR_LOGS"
             cat $TARGET_DIR/.server-log.yass-report.tmp | sort -nr
             rm -rf $TARGET_DIR/.server-log.yass-report.tmp
+
+            echo " Number of server logs with stuck thread occurrences: $STUCK_FILE_COUNT"
+            if [ $STUCK_FILE_COUNT -gt 1 ]; then
+                echo " Most stuck request occurrences: $MAX_STUCK - $MAX_STUCK_FILE"
+                echo " Highest peak stuck count: $MAX_PEAK_STUCK - $MAX_PEAK_STUCK_FILE"
+                echo " Highest average stuck time: $MAX_AVG_STUCK_TIME - $MAX_AVG_STUCK_TIME_FILE"
+                echo " Longest stuck time: $MAX_LONG_STUCK_TIME - $MAX_LONG_STUCK_TIME_FILE"
+            fi
         } | tee -a $TARGET_DIR/server-log.yass-report
         echo "====== Completed server log summary ======" >> $TARGET_DIR/server-log.yass-report
         echo -e "${YELLOW}====== Completed server log summary ======${NC}"
