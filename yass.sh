@@ -425,7 +425,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$EXTRACT" = "true" ]; then
                 if [[ ${file} != *"sosreport"* ]]; then
                     echo "    Extracting $file"
                     mkdir $file-extract
-                    aunpack -X $file-extract $file; [ $? -eq 0 ] && rm -rf $file || mv $file $file.yass-extract-failed
+                    aunpack -X $file-extract $file; [ $? -eq 0 ] && rm -rf $file && chmod 755 -R $file-extract || mv $file $file.yass-extract-failed
                     pids+=($!)
                     # We extracted, so check again in case there were nested compressed archives
                     CHECK_FILES=true
