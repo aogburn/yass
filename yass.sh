@@ -372,7 +372,7 @@ fi
 
 # First download any files via casegrab
 if [ "x$CASE_ID" != "x" ]; then
-    casegrab -h > /dev/null
+    which casegrab > /dev/null
     if [ $? -ne 0 ]; then
         echo -e "${RED}casegrab command not found.  Cannot successfully download case files.  Ensure casegrab package is installed.${NC}"
     else
