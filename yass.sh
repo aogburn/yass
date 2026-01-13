@@ -377,11 +377,11 @@ if [ "x$CASE_ID" != "x" ]; then
         echo -e "${RED}casegrab command not found.  Cannot successfully download case files.  Ensure casegrab package is installed.${NC}"
     else
         if [ "x$CASEGRAB_NUMBER" != "x" ]; then
-            casegrab -d -m $CASEGRAB_SIZE_LIMIT -n $CASEGRAB_NUMBER --case-dir $CASE_DIR/$CASE_ID/.latest $CASE_ID
+            echo | casegrab -d -m $CASEGRAB_SIZE_LIMIT -n $CASEGRAB_NUMBER --case-dir $CASE_DIR/$CASE_ID/.latest $CASE_ID
         elif [ "x$CASEGRAB_FILE" != "x" ]; then
-            casegrab -d -f $CASEGRAB_FILE --case-dir $CASE_DIR/$CASE_ID/.latest $CASE_ID
+            echo | casegrab -d -f $CASEGRAB_FILE --case-dir $CASE_DIR/$CASE_ID/.latest $CASE_ID
         else
-            casegrab -d -m $CASEGRAB_SIZE_LIMIT --case-dir $CASE_DIR/$CASE_ID/.latest $CASE_ID
+            echo | casegrab -d -m $CASEGRAB_SIZE_LIMIT --case-dir $CASE_DIR/$CASE_ID/.latest $CASE_ID
         fi
         result=$?
         if [ $result -gt 0 ]; then
