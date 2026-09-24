@@ -502,7 +502,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$THREAD" = "true" ]; then
         echo -e "${GREEN}## Finding and summarizing thread dump files in $FILE_PREFIX$TARGET_DIR with $YATDA_SH ##${NC}"
         NUMBER_THREAD_DUMPS=0
         # exclude a .archive subdirectory casegrab could create
-        for file in `grep -lR "Full thread dump " $TARGET_DIR | grep -v "/\.archive"`; do
+        for file in `grep -slr "Full thread dump " $TARGET_DIR | grep -v "/\.archive"`; do
             isFile=`file $file | grep "ASCII text"`
             if [ "$isFile" != "" ]; then
                 echo "    Summarizing $FILE_PREFIX$file with $YATDA_SH"
@@ -1144,7 +1144,7 @@ fi
 # Find and count heap dumps
 if [ "$OPTIONS_SET" = "false" ] || [ "$HEAP_DUMP" = "true" ]; then
     #NUMBER_HEAP_DUMPS=`find $TARGET_DIR -type f -iname \*.hprof  -o -iname \*.bin | wc -l`
-    NUMBER_HEAP_DUMPS=`grep -lR "JAVA PROFILE" $TARGET_DIR | grep -v "/\.archive" | wc -l`
+    NUMBER_HEAP_DUMPS=`grep -slr "JAVA PROFILE" $TARGET_DIR | grep -v "/\.archive" | wc -l`
     if [ $NUMBER_HEAP_DUMPS -gt 0 ]; then
         echo -e "${YELLOW}====== Final heap dump summary ======${NC}"
         echo "====== Final heap dump summary ======" > $TARGET_DIR/heap-dump.yass-report
@@ -1152,7 +1152,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$HEAP_DUMP" = "true" ]; then
             LARGEST_HEAP_DUMP_SIZE=0
             echo "Number of heap dump files: $NUMBER_HEAP_DUMPS"
             #for file in `find $TARGET_DIR -type f -iname \*.hprof -o -iname \*.bin`; do
-            for file in `grep -lR "JAVA PROFILE" $TARGET_DIR | grep -v "/\.archive"`; do
+            for file in `grep -slr "JAVA PROFILE" $TARGET_DIR | grep -v "/\.archive"`; do
                 if [[ $file != *.hprof ]]; then
                    echo "adding proper .hprof extension to $file"
                    mv $file $file.hprof
