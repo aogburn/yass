@@ -380,6 +380,7 @@ if [ "x$CASE_ID" != "x" ]; then
         else
             yank $CASE_ID
             TARGET_DIR=$CASE_DIR/$CASE_ID/
+            YANK="true"
         fi
     else
         if [ "x$CASEGRAB_NUMBER" != "x" ]; then
@@ -417,6 +418,7 @@ fi
 
 # Next extract any files
 if [ "$OPTIONS_SET" = "false" ] || [ "$EXTRACT" = "true" ]; then
+if [[ "$YANK" != "true" ]]; then
     aunpack --version > /dev/null
     if [ $? -ne 0 ]; then
         echo -e "${RED}aunpack command not found.  Cannot successfully extract files.  Ensure atool package is installed.${NC}"
@@ -459,6 +461,7 @@ if [ "$OPTIONS_SET" = "false" ] || [ "$EXTRACT" = "true" ]; then
         done
     fi
     echo
+fi
 fi
 
 
