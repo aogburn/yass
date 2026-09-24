@@ -4,7 +4,7 @@ Yass is just 'Yet Another Script' Script.  It is a main script to call and more 
 # installation
 * To install, run the following in a directory where you want to keep the script and known error file references:
 ```
-wget https://raw.githubusercontent.com/aogburn/yass/main/yass.sh
+wget --no-check-certificate https://raw.githubusercontent.com/aogburn/yass/main/yass.sh
 chmod 755 yass.sh
 ```
 * Install the atool package to provide the aunpack command used to easily uncompress various file types.  And also install other compression libraries and docker to be able to run krashpad:
