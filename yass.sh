@@ -250,7 +250,7 @@ if [ "$CHECK_UPDATE" == "true" ]; then
             fi
             if [ "$UPDATE" = "true" ]; then
                 echo "Downloading new version of yass. Please re-run $YASS_SH."
-                wget -q $REMOTE_YASS_SH -O $DIR/$YASS_SH
+                wget --no-check-certificate -q $REMOTE_YASS_SH -O $DIR/$YASS_SH
                 exit
             fi
         fi
@@ -287,7 +287,7 @@ if [ "$CHECK_UPDATE" == "true" ]; then
                 fi
                 if [ "$UPDATE" = "true" ]; then
                     echo "Downloading new yatda version."
-                    wget -q $REMOTE_YATDA_SH -O $YATDA_SH
+                    wget --no-check-certificate -q $REMOTE_YATDA_SH -O $YATDA_SH
                 fi
             fi
         fi
@@ -320,7 +320,7 @@ if [ "$CHECK_UPDATE" == "true" ]; then
                 fi
                 if [ "$UPDATE" = "true" ]; then
                     echo "Downloading new yala version."
-                    wget -q $REMOTE_YALA_SH -O $YALA_SH
+                    wget --no-check-certificate -q $REMOTE_YALA_SH -O $YALA_SH
                 fi
             fi
         fi
@@ -355,7 +355,7 @@ if [ "$CHECK_UPDATE" == "true" ]; then
                 fi
                 if [ "$UPDATE" = "true" ]; then
                     echo "Downloading new yala error pack version."
-                    wget -q $REMOTE_YALA_ERRORS -O $YALA_ERRORS
+                    wget --no-check-certificate -q $REMOTE_YALA_ERRORS -O $YALA_ERRORS
                     rm -r $ERRORS_DIR
                     rm -r $SCRIPTS_DIR
                     tar -xf $YALA_ERRORS -C $YALA_DIR
@@ -374,7 +374,13 @@ fi
 if [ "x$CASE_ID" != "x" ]; then
     which casegrab > /dev/null
     if [ $? -ne 0 ]; then
-        echo -e "${RED}casegrab command not found.  Cannot successfully download case files.  Ensure casegrab package is installed.${NC}"
+        which yank > /dev/null
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}casegrab and yank command not found.  Cannot successfully download case files.  Ensure casegrab package is installed if not on supportshell.${NC}"
+        else
+            yank $CASE_ID
+            TARGET_DIR=$CASE_DIR/$CASE_ID/
+        fi
     else
         if [ "x$CASEGRAB_NUMBER" != "x" ]; then
             echo | casegrab -d -m $CASEGRAB_SIZE_LIMIT -n $CASEGRAB_NUMBER --case-dir $CASE_DIR/$CASE_ID/.latest $CASE_ID
